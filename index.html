@@ -1472,6 +1472,93 @@
   }
   .plan-section-body { padding: 0; }
 
+  /* ── Per-Section Edit Button ────────────────── */
+  .plan-section { position: relative; }
+  .plan-section-edit-btn {
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border: 1px solid var(--gone-but-golden);
+    border-radius: 4px;
+    background: #fff;
+    color: var(--midnight-slate);
+    font-family: var(--font-primary);
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    opacity: 0.7;
+    z-index: 5;
+  }
+  .plan-section-edit-btn:hover {
+    opacity: 1;
+    border-color: var(--freshly-dug);
+    color: var(--freshly-dug);
+  }
+  .plan-section-edit-btn.editing {
+    background: var(--ink);
+    color: #fff;
+    border-color: var(--ink);
+    opacity: 1;
+  }
+  .plan-section-edit-btn.editing:hover {
+    background: #1E0940;
+  }
+  .plan-section-edit-actions {
+    display: none;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .plan-section.section-editing .plan-section-edit-actions {
+    display: flex;
+  }
+  .plan-section-edit-actions button {
+    padding: 5px 14px;
+    border-radius: 4px;
+    font-family: var(--font-primary);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .plan-section-save-btn {
+    background: var(--freshly-dug);
+    color: #fff;
+    border: 1px solid var(--freshly-dug);
+  }
+  .plan-section-save-btn:hover { background: #6A4C2A; }
+  .plan-section-cancel-btn {
+    background: #fff;
+    color: var(--midnight-slate);
+    border: 1px solid var(--gone-but-golden);
+  }
+  .plan-section-cancel-btn:hover { border-color: var(--midnight-slate); }
+  .plan-section.section-editing .plan-section-body [contenteditable="true"] {
+    outline: 1px dashed var(--gone-but-golden);
+    outline-offset: 2px;
+    border-radius: 3px;
+    cursor: text;
+    min-height: 1em;
+    transition: outline-color 0.2s;
+  }
+  .plan-section.section-editing .plan-section-body [contenteditable="true"]:hover {
+    outline-color: var(--freshly-dug);
+  }
+  .plan-section.section-editing .plan-section-body [contenteditable="true"]:focus {
+    outline: 2px solid var(--freshly-dug);
+    outline-offset: 2px;
+    background: rgba(123, 88, 50, 0.03);
+  }
+  /* Hide section edit buttons in PDF mode */
+  .pdf-mode .plan-section-edit-btn,
+  .pdf-mode .plan-section-edit-actions { display: none !important; }
+  /* Hide section edit buttons when global edit mode is active */
+  .plan-edit-mode .plan-section-edit-btn { display: none !important; }
+
   /* ── Content Items ──────────────────────────── */
   .plan-item {
     padding: 10px 0;
@@ -4582,20 +4669,29 @@ ${context}`;
       window._lastReportData = data;
 
       // Generate plan and switch to plan view
-      if (isAIEnabled()) {
+      var genMode = isAIEnabled() ? getGenerationMode() : 'template';
+
+      if (genMode === 'ai' || genMode === 'hybrid') {
         // Show loading state
-        document.getElementById('planContent').innerHTML = '<div style="text-align:center;padding:60px 20px;"><div class="plan-cover-wordmark" style="margin-bottom:20px;">octopus<span>legacy</span></div><p style="font-size:16px;color:var(--ink);margin-bottom:12px;">Generating personalised plan...</p><p style="font-size:13px;color:var(--midnight-slate);">This may take 15-30 seconds. The AI is reading the knowledge bank and writing a plan tailored to this caller.</p></div>';
+        var loadMsg = genMode === 'hybrid'
+          ? 'Generating personalised plan (hybrid mode)...'
+          : 'Generating personalised plan...';
+        var loadSub = genMode === 'hybrid'
+          ? 'Each section is being written individually. This may take 20-40 seconds.'
+          : 'This may take 15-30 seconds. The AI is reading the knowledge bank and writing a plan tailored to this caller.';
+        document.getElementById('planContent').innerHTML = '<div style="text-align:center;padding:60px 20px;"><div class="plan-cover-wordmark" style="margin-bottom:20px;">octopus<span>legacy</span></div><p style="font-size:16px;color:var(--ink);margin-bottom:12px;">' + loadMsg + '</p><p style="font-size:13px;color:var(--midnight-slate);">' + loadSub + '</p></div>';
         document.querySelector('.layout-wrap').style.display = 'none';
         document.querySelector('.top-bar-actions').style.display = 'none';
         document.querySelector('.progress-bar-wrap').style.display = 'none';
         document.getElementById('planView').classList.add('active');
         window.scrollTo({ top: 0, behavior: 'smooth' });
 
-        generatePlanWithAI(data).then(function(planHTML) {
+        var genFn = genMode === 'hybrid' ? generateHybridPlan : generatePlanWithAI;
+        genFn(data).then(function(planHTML) {
           document.getElementById('planContent').innerHTML = planHTML;
           savePlanToStorage();
           _attachPlanInputListener();
-          if (typeof showToast === 'function') showToast('AI plan generated successfully', 'info');
+          if (typeof showToast === 'function') showToast(genMode === 'hybrid' ? 'Hybrid plan generated - click Edit on any section to refine' : 'AI plan generated successfully', 'info');
         }).catch(function(err) {
           console.error('AI generation failed, falling back to template:', err);
           if (typeof showToast === 'function') showToast('AI generation failed - using template plan. ' + err.message, 'warning');
@@ -5346,6 +5442,13 @@ ${context}`;
   function isAIEnabled() {
     return getAIApiKey().length > 10;
   }
+  function getGenerationMode() {
+    // Returns 'template', 'ai', or 'hybrid'
+    try { return localStorage.getItem('ol_gen_mode') || 'template'; } catch(e) { return 'template'; }
+  }
+  function setGenerationMode(mode) {
+    try { localStorage.setItem('ol_gen_mode', mode); } catch(e) {}
+  }
 
   // ── KB relevance matching ──
   // Searches the Knowledge Bank for entries relevant to this person's situation.
@@ -5641,6 +5744,335 @@ Please write the personalised bereavement plan sections for ${callerName}. Remem
       return result.content[0].text;
     }
     throw new Error('Unexpected API response format');
+  }
+
+  // ── Hybrid Generation: per-section LLM call ─────────────────────────
+  var HYBRID_SECTION_CONFIG = {
+    registering: { title: 'Registering the Death', iconKey: 'pencil', timeGuidance: 'Typically within 5 days', kbTags: ['registration', 'death certificate', 'register', 'coroner'] },
+    will: { title: 'Will and Estate', iconKey: 'clipboard', timeGuidance: 'As soon as possible', kbTags: ['will', 'estate', 'executor', 'intestacy'] },
+    funeral: { title: 'Funeral Arrangements', iconKey: 'heart', timeGuidance: 'Usually within 2-3 weeks', kbTags: ['funeral', 'cremation', 'burial', 'funeral director'] },
+    notifications: { title: 'Notifying Organisations', iconKey: 'envelope', timeGuidance: 'As soon as practical', kbTags: ['notify', 'tell us once', 'notification', 'bank', 'utility', 'insurance', 'council tax'] },
+    financial: { title: 'Financial Next Steps', iconKey: 'banknotes', timeGuidance: 'Within the first few weeks', kbTags: ['bank', 'joint account', 'direct debit', 'financial', 'money', 'bills'] },
+    legal: { title: 'Legal Steps and Probate', iconKey: 'building', timeGuidance: 'When you are ready', kbTags: ['probate', 'grant', 'legal', 'solicitor', 'iht', 'inheritance tax'] },
+    housing: { title: 'Housing', iconKey: 'home', timeGuidance: 'No immediate rush', kbTags: ['housing', 'tenancy', 'mortgage', 'rent', 'council', 'property'] },
+    dependants: { title: 'Children and Dependants', iconKey: 'users', timeGuidance: 'Ongoing support', kbTags: ['children', 'dependants', 'guardian', 'school'] },
+    employment: { title: 'Employment', iconKey: 'briefcase', timeGuidance: 'When you feel ready', kbTags: ['employer', 'bereavement leave', 'work', 'employment'] },
+    benefits: { title: 'Benefits', iconKey: 'banknotes', timeGuidance: 'Within the first month', kbTags: ['bsp', 'bereavement support payment', 'benefits', 'universal credit'] },
+    wellbeing: { title: 'Emotional Wellbeing', iconKey: 'sun', timeGuidance: 'Ongoing', kbTags: ['counselling', 'grief', 'support', 'wellbeing', 'mental health'] }
+  };
+
+  function buildHybridSectionPrompt(sectionKey, data, sectionKBEntries) {
+    var config = HYBRID_SECTION_CONFIG[sectionKey];
+    if (!config) return null;
+    var callerName = data.caller.first_name || 'the caller';
+    var decFirst = data.deceased.first_name || 'their loved one';
+    var relationship = data.caller.relationship || 'family member';
+    var tone = getEmotionalTone(data.wellbeing.state, data.wellbeing.caller_feeling, data.wellbeing.adviser_notes);
+
+    if (data.deceased.sensitive_case) {
+      tone.sensitive = true;
+    }
+
+    // Build section-specific data summary
+    var sectionData = {};
+    sectionData.caller = { first_name: callerName, relationship: relationship };
+    sectionData.deceased = { first_name: decFirst, dod: data.deceased.dod, sensitive_case: data.deceased.sensitive_case };
+
+    // Add relevant topic data for this section
+    var topicMap = {
+      registering: ['registering'], will: ['will'], funeral: ['funeral'],
+      notifications: ['notify'], financial: ['finances'], legal: ['legal'],
+      housing: ['notify'], dependants: ['children'], employment: ['employment'],
+      benefits: ['benefits'], wellbeing: ['emotional']
+    };
+    var topicKeys = topicMap[sectionKey] || [];
+    topicKeys.forEach(function(k) { if (data.topics[k]) sectionData[k] = data.topics[k]; });
+
+    // Add already_completed and immediate_concerns
+    sectionData.already_completed = data.already_completed || {};
+    sectionData.immediate_concerns = data.immediate_concerns || {};
+    if (data.topics.unsure) sectionData.unsure = data.topics.unsure;
+
+    // Build KB context string
+    var kbContext = sectionKBEntries.map(function(e) {
+      return '### ' + e.label + '\n' + e.value;
+    }).join('\n\n');
+
+    // Available org keys for this section
+    var orgKeys = sectionKBEntries
+      .filter(function(e) { return e.key && e.key.startsWith('contact_'); })
+      .map(function(e) { return e.key; });
+
+    var systemPrompt = `You are a bereavement specialist at Octopus Legacy writing ONE section of a personalised bereavement plan. Write with warmth and clarity - plain-spoken, calm, never clinical or corporate.
+
+CRITICAL RULES:
+- NEVER use en-dashes or em-dashes. Use regular hyphens only.
+- NEVER repeat the caller's personal notes verbatim. Weave their situation naturally into advice.
+- Use "${decFirst}" naturally throughout.
+- Write in second person ("you") addressing ${callerName}.
+- Be specific: reference actual organisations and processes from the Knowledge Bank.
+- This section is "${config.title}".
+${tone.sensitive ? '- This is a sensitive case. Be especially gentle. No pressure to act.' : '- Be warm and supportive but practical.'}
+
+RESPONSE FORMAT:
+Return a JSON object with exactly two keys:
+{
+  "prose": "<html string with your advice for this section>",
+  "suggested_orgs": ["contact_key_1", "contact_key_2"]
+}
+
+For "prose": Write 2-4 short paragraphs of HTML. Use <p> tags for paragraphs, <strong> for emphasis, <a href="..." target="_blank"> for links. Do NOT include section headers or wrapper divs - just the inner content paragraphs.
+
+For "suggested_orgs": Pick from this list of available organisation keys that are relevant to mention in this section. Only include ones that genuinely apply:
+${orgKeys.length > 0 ? orgKeys.join(', ') : '(none available)'}
+
+Return ONLY the JSON object, no markdown fences, no explanation.`;
+
+    var userPrompt = `Section-specific caller data:
+\`\`\`json
+${JSON.stringify(sectionData, null, 2)}
+\`\`\`
+
+Relevant Knowledge Bank entries:
+${kbContext || '(none)'}
+
+Write the "${config.title}" section for ${callerName}'s bereavement plan.`;
+
+    return { system: systemPrompt, user: userPrompt };
+  }
+
+  function getKBEntriesForSection(sectionKey, allEntries) {
+    var config = HYBRID_SECTION_CONFIG[sectionKey];
+    if (!config) return [];
+    var tags = new Set(config.kbTags.map(function(t) { return t.toLowerCase(); }));
+
+    return allEntries.filter(function(entry) {
+      var score = 0;
+      entry.tags.forEach(function(tag) {
+        if (tags.has(tag.toLowerCase())) score++;
+      });
+      tags.forEach(function(t) {
+        if (entry.label.toLowerCase().includes(t)) score += 0.5;
+      });
+      return score > 0;
+    });
+  }
+
+  function buildOrgCardsHTML(orgKeys) {
+    if (!orgKeys || orgKeys.length === 0) return '';
+    var allEntries = (window.reference_knowledge && window.reference_knowledge.entries) || [];
+    var entryMap = {};
+    allEntries.forEach(function(e) { entryMap[e.key] = e; });
+
+    var cards = orgKeys.map(function(key) {
+      var entry = entryMap[key];
+      if (!entry) return '';
+      return '<div class="plan-org-item"><strong>' + escHTML(entry.label) + '</strong><p>' + entry.value + '</p></div>';
+    }).filter(Boolean);
+
+    if (cards.length === 0) return '';
+    return '<div class="plan-org-list" style="margin-top:14px;">' + cards.join('') + '</div>';
+  }
+
+  async function callClaudeAPIHybrid(systemPrompt, userPrompt) {
+    var apiKey = getAIApiKey();
+    if (!apiKey) throw new Error('No API key configured');
+
+    var response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 1500,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userPrompt }]
+      })
+    });
+
+    if (!response.ok) {
+      var errBody = await response.text();
+      throw new Error('API error ' + response.status + ': ' + errBody);
+    }
+
+    var result = await response.json();
+    if (result.content && result.content[0] && result.content[0].text) {
+      var text = result.content[0].text.trim();
+      // Strip markdown code fences if present
+      text = text.replace(/^```json?\n?/i, '').replace(/\n?```$/i, '').trim();
+      try {
+        return JSON.parse(text);
+      } catch (e) {
+        // If JSON parse fails, treat as prose-only
+        return { prose: text, suggested_orgs: [] };
+      }
+    }
+    throw new Error('Unexpected API response format');
+  }
+
+  async function generateHybridSection(sectionKey, data, allEntries) {
+    var config = HYBRID_SECTION_CONFIG[sectionKey];
+    if (!config) return '';
+
+    var sectionKB = getKBEntriesForSection(sectionKey, allEntries);
+    var prompts = buildHybridSectionPrompt(sectionKey, data, sectionKB);
+    if (!prompts) return '';
+
+    var result = await callClaudeAPIHybrid(prompts.system, prompts.user);
+    var prose = result.prose || '';
+    var orgCards = buildOrgCardsHTML(result.suggested_orgs || []);
+
+    var tone = getEmotionalTone(data.wellbeing.state, data.wellbeing.caller_feeling, data.wellbeing.adviser_notes);
+    return wrapSection(config.iconKey, config.title, '', prose + orgCards, tone, config.timeGuidance);
+  }
+
+  async function generateHybridPlan(data) {
+    _sectionLeadUsed = false;
+    var callerName = data.caller.first_name || 'there';
+    var decFirst = data.deceased.first_name || 'your loved one';
+    var relLabel = formatRelationshipForPlan(data.caller.relationship, data.deceased.first_name, data.caller.child_type);
+    var adviserFullName = data.call_details.adviser_name || 'Your specialist';
+    var adviserName = (adviserFullName.split(' ')[0]) || 'Your specialist';
+    var tone = getEmotionalTone(data.wellbeing.state, data.wellbeing.caller_feeling, data.wellbeing.adviser_notes);
+    var allEntries = (window.reference_knowledge && window.reference_knowledge.entries) || [];
+
+    if (data.deceased.sensitive_case) {
+      tone.intro = 'We understand this is an incredibly difficult time, and we are so sorry for what you are going through. We have put this plan together with care, and there is absolutely no pressure to look at it until you feel ready.';
+      tone.sectionLead = 'Please only read this when you feel able to. There is no set order you need to follow, and every step can wait until you are ready.';
+      tone.closing = 'We are here for you, for as long as you need. If you would like to talk anything through, or if you simply need someone to listen, please do not hesitate to call us. There is no question too small, and no wrong time to reach out.';
+      tone.sensitive = true;
+    }
+
+    // Merge fact-find and already-completed data (same logic as generatePlan)
+    var ac = data.already_completed || {};
+    var ff = data.fact_find || {};
+    if (ac.registering_death) {
+      if (!data.topics.registering) data.topics.registering = {};
+      if (!data.topics.registering.registered) data.topics.registering.registered = 'yes';
+    }
+    if (ac.will) {
+      if (!data.topics.will) data.topics.will = {};
+      if (ff.will) {
+        if (ff.will.exists === 'yes') data.topics.will.has_will = 'yes';
+        if (ff.will.exists === 'no') data.topics.will.has_will = 'no';
+        if (ff.will.executor === 'yes') data.topics.will.has_executor = 'yes';
+      } else {
+        if (!data.topics.will.has_will) data.topics.will.has_will = 'yes';
+      }
+    }
+    if (ac.funeral) {
+      if (!data.topics.funeral) data.topics.funeral = {};
+      if (!data.topics.funeral.started) data.topics.funeral.started = 'yes';
+    }
+    if (ac.notify_orgs) {
+      if (!data.topics.notify) data.topics.notify = {};
+      if (ff.notify && ff.notify.tuo === 'yes') data.topics.notify.tell_us_once = 'yes';
+    }
+    if (ac.finances) {
+      if (!data.topics.finances) data.topics.finances = {};
+      if (ff.finances && ff.finances.accounts) data.topics.finances.joint_accounts = ff.finances.accounts;
+    }
+    if (ac.housing) {
+      if (!data.topics.notify) data.topics.notify = {};
+      if (ff.housing && ff.housing.type) {
+        var typeMap = { owned: 'own', rented: 'rent', council: 'council' };
+        if (!data.topics.notify.living_situation) data.topics.notify.living_situation = typeMap[ff.housing.type] || ff.housing.type;
+      }
+    }
+    if (ac.employment) {
+      if (!data.topics.employment) data.topics.employment = {};
+      if (!data.topics.employment.spoken) data.topics.employment.spoken = 'yes';
+    }
+    if (ac.emotional) {
+      if (!data.topics.emotional) data.topics.emotional = {};
+      if (!data.topics.emotional.support) data.topics.emotional.support = 'yes';
+    }
+    if (ac.benefits) {
+      if (!data.topics.benefits) data.topics.benefits = {};
+      if (!data.topics.benefits.receiving) data.topics.benefits.receiving = 'yes';
+    }
+    if (ac.legal) {
+      if (!data.topics.legal) data.topics.legal = {};
+      if (ff.legal) {
+        if (ff.legal.applied === 'yes') data.topics.legal.probate_mentioned = 'yes';
+        if (ff.legal.solicitor === 'yes' || ff.legal.solicitor === 'considering') {
+          data.topics.legal.probate_support = ff.legal.solicitor === 'yes' ? 'solicitor' : 'considering';
+        }
+      }
+    }
+
+    // Determine which sections to include (same conditional logic as generatePlan)
+    var isUnsure = data.immediate_concerns.unsure;
+    var u = data.topics.unsure || {};
+
+    var sectionsToGenerate = [];
+    if (!ac.registering_death && (data.immediate_concerns.registering_death || data.deceased.death_registered === 'no' || data.deceased.death_registered === 'unsure' || (isUnsure && u.registered !== 'yes'))) {
+      sectionsToGenerate.push('registering');
+    }
+    if (!ac.will && (data.immediate_concerns.will || (isUnsure && u.will !== 'yes') || (!data.immediate_concerns.will && !isUnsure && data.topics.will.has_will !== 'yes'))) {
+      sectionsToGenerate.push('will');
+    }
+    if (!ac.funeral && (data.immediate_concerns.funeral || (isUnsure && (u.funeral !== 'yes' || u.funeral_plan === 'unsure')))) {
+      sectionsToGenerate.push('funeral');
+    }
+    if (!ac.notify_orgs && (data.immediate_concerns.notify_orgs || hasNotifications(data) || (isUnsure && (u.tuo !== 'yes' || u.orgs_notified !== 'yes')))) {
+      sectionsToGenerate.push('notifications');
+    }
+    if (!ac.finances && (data.immediate_concerns.finances || hasFinancialConcerns(data) || (isUnsure && (u.money_access !== 'yes' || u.bills !== 'no')))) {
+      sectionsToGenerate.push('financial');
+    }
+    if (!ac.legal && (data.immediate_concerns.legal || (isUnsure && u.probate !== 'yes') || data.immediate_concerns.will)) {
+      sectionsToGenerate.push('legal');
+    }
+    if (!ac.housing && (data.immediate_concerns.housing || data.topics.notify.living_situation || (isUnsure && u.housing === 'yes'))) {
+      sectionsToGenerate.push('housing');
+    }
+    if (!ac.children && (data.immediate_concerns.children || data.topics.children.has_children === 'yes' || data.topics.children.other_dependants === 'yes' || (isUnsure && u.dependants === 'yes'))) {
+      sectionsToGenerate.push('dependants');
+    }
+    if (!ac.employment && (data.immediate_concerns.employment || (isUnsure && (u.employment === 'yes_unsure' || u.employment === 'yes_supportive')))) {
+      sectionsToGenerate.push('employment');
+    }
+    if (!ac.benefits && (data.immediate_concerns.benefits || (isUnsure && (u.benefits !== 'yes')) || (!data.immediate_concerns.benefits && !isUnsure))) {
+      sectionsToGenerate.push('benefits');
+    }
+    // Wellbeing always included
+    sectionsToGenerate.push('wellbeing');
+
+    // Generate all sections via LLM (parallel for speed)
+    var sectionPromises = sectionsToGenerate.map(function(key) {
+      return generateHybridSection(key, data, allEntries).catch(function(err) {
+        console.error('Hybrid section error (' + key + '):', err);
+        // Fallback: return empty string (section will be skipped)
+        return '';
+      });
+    });
+    var generatedSections = await Promise.all(sectionPromises);
+
+    // Build the full plan
+    var sections = [];
+    function page(html) { return '<div class="pdf-page-break">' + html + '</div>'; }
+
+    // Cover page
+    sections.push(buildCoverPage(data, callerName, decFirst, relLabel, adviserName, tone));
+
+    // Flowing content: note from us + LLM sections + checklist
+    var flowingSections = [];
+    flowingSections.push('<div class="plan-cover-wordmark" style="margin-bottom:20px;">octopus<span>legacy</span></div>');
+    flowingSections.push(buildCallSummary(data, adviserFullName, tone));
+
+    generatedSections.forEach(function(html) {
+      if (html) flowingSections.push(html);
+    });
+
+    flowingSections.push('<div class="pdf-page-break-before"></div>' + buildActionChecklist(data, tone));
+    sections.push(page('<div class="pdf-flowing-content">' + flowingSections.join('') + '</div>'));
+
+    return sections.join('');
   }
 
   // ── Generate plan with AI ──
@@ -6615,10 +7047,18 @@ Please write the personalised bereavement plan sections for ${callerName}. Remem
     }
     return `
       <div class="plan-section">
+        <button type="button" class="plan-section-edit-btn" onclick="toggleSectionEdit(this)" title="Edit this section">
+          <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"/></svg>
+          Edit
+        </button>
         <div class="plan-section-header">
           ${timeLabel}<h3>${title}</h3>
         </div>
         <div class="plan-section-body">${lead}${bodyHTML}</div>
+        <div class="plan-section-edit-actions">
+          <button type="button" class="plan-section-save-btn" onclick="saveSectionEdit(this)">Save</button>
+          <button type="button" class="plan-section-cancel-btn" onclick="cancelSectionEdit(this)">Cancel</button>
+        </div>
       </div>
     `;
   }
@@ -6761,6 +7201,11 @@ Please write the personalised bereavement plan sections for ${callerName}. Remem
 
   // Prepare the plan element for PDF capture, then restore it after
   function preparePdfMode(el) {
+    // Exit any active per-section editing before PDF capture
+    el.querySelectorAll('.plan-section.section-editing').forEach(function(sec) {
+      _exitSectionEdit(sec);
+    });
+
     el.classList.add('pdf-mode');
     window.scrollTo(0, 0); // reset scroll so html2canvas captures from top
 
@@ -7416,6 +7861,112 @@ Please write the personalised bereavement plan sections for ${callerName}. Remem
 
       showToast('Editing complete - your changes will be included in the PDF.', 'success');
     }
+  }
+
+  // ── Per-Section Edit ──────────────────────────────────────────────────
+  var _sectionEditableSelectors = [
+    '.plan-item-content h4',
+    '.plan-item-content p',
+    '.plan-callout strong',
+    '.plan-callout p',
+    '.plan-section-body > p',
+    '.plan-summary-grid p',
+    '.plan-summary-grid strong',
+    '.plan-wellbeing-card h4',
+    '.plan-wellbeing-card p',
+    '.plan-checklist li strong',
+    '.plan-checklist li div > span',
+    '.plan-org-item strong',
+    '.plan-org-item p'
+  ];
+
+  function toggleSectionEdit(btn) {
+    var section = btn.closest('.plan-section');
+    if (!section) return;
+    var isEditing = section.classList.contains('section-editing');
+
+    if (isEditing) {
+      // Save and exit
+      _exitSectionEdit(section);
+    } else {
+      // Enter edit mode for this section
+      _enterSectionEdit(section);
+    }
+  }
+
+  function _enterSectionEdit(section) {
+    // Store original HTML for cancel
+    var body = section.querySelector('.plan-section-body');
+    if (body) section.setAttribute('data-original-html', body.innerHTML);
+
+    section.classList.add('section-editing');
+    var btn = section.querySelector('.plan-section-edit-btn');
+    if (btn) {
+      btn.innerHTML = '<svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg> Done';
+      btn.classList.add('editing');
+    }
+
+    // Make elements editable
+    _sectionEditableSelectors.forEach(function(sel) {
+      section.querySelectorAll(sel).forEach(function(node) {
+        node.setAttribute('contenteditable', 'true');
+        node.setAttribute('data-section-editable', '1');
+      });
+    });
+
+    showToast('Editing section - click any text to modify it.', 'success');
+  }
+
+  function _exitSectionEdit(section) {
+    section.classList.remove('section-editing');
+    section.removeAttribute('data-original-html');
+    var btn = section.querySelector('.plan-section-edit-btn');
+    if (btn) {
+      btn.innerHTML = '<svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"/></svg> Edit';
+      btn.classList.remove('editing');
+    }
+
+    // Remove contenteditable
+    section.querySelectorAll('[data-section-editable]').forEach(function(node) {
+      node.removeAttribute('contenteditable');
+      node.removeAttribute('data-section-editable');
+    });
+
+    savePlanToStorage();
+    showToast('Section saved.', 'success');
+  }
+
+  function saveSectionEdit(actionBtn) {
+    var section = actionBtn.closest('.plan-section');
+    if (section) _exitSectionEdit(section);
+  }
+
+  function cancelSectionEdit(actionBtn) {
+    var section = actionBtn.closest('.plan-section');
+    if (!section) return;
+
+    // Restore original HTML
+    var originalHTML = section.getAttribute('data-original-html');
+    var body = section.querySelector('.plan-section-body');
+    if (originalHTML && body) {
+      body.innerHTML = originalHTML;
+    }
+
+    section.classList.remove('section-editing');
+    section.removeAttribute('data-original-html');
+    var btn = section.querySelector('.plan-section-edit-btn');
+    if (btn) {
+      btn.innerHTML = '<svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"/></svg> Edit';
+      btn.classList.remove('editing');
+    }
+
+    // Remove any lingering contenteditable
+    section.querySelectorAll('[data-section-editable]').forEach(function(node) {
+      node.removeAttribute('contenteditable');
+      node.removeAttribute('data-section-editable');
+    });
+
+    showToast('Changes discarded.', 'info');
   }
 
   function downloadPlanPDF() {
@@ -8106,6 +8657,39 @@ Please write the personalised bereavement plan sections for ${callerName}. Remem
         { key: 'contact_bt', label: 'BT (British Telecom) - bereavement contact details', tags: ['bt', 'british telecom', 'broadband', 'tv', 'home phone', 'landline', 'bereavement', 'telecoms'], value: 'BT (British Telecom). Phone: 0800 169 1663 (Mon-Fri 8am-9pm, Sat-Sun 8am-8pm). Can also use online form. Online: www.bt.com/help/account-and-billing/manage-account/bereavement---bt-account-holder. Manages BT broadband, TV, and landline accounts. Can change the name of the account holder or close the account. Information needed: account holder\'s name, account number, date of birth, address; your name, address, and relationship to the deceased.' },
         { key: 'contact_sky', label: 'Sky - bereavement contact details', tags: ['sky', 'tv', 'broadband', 'mobile', 'bereavement', 'telecoms'], value: 'Sky. Phone: 0333 2020 912 (Mon-Fri 8:30am-7:30pm, Sat 8:30am-5pm). Can also SMS text to 07360268288 (Mon-Fri 9am-5pm, Sat 9am-4pm). Online: www.sky.com/help/articles/deceased-sky-account-holder. Cancels or changes ownership of Sky TV, broadband, and mobile contracts. Information needed: Sky account number or registered email address. Processing time: 7-14 working days.' },
         { key: 'contact_virgin_media', label: 'Virgin Media - bereavement contact details', tags: ['virgin media', 'virgin', 'broadband', 'tv', 'cable', 'bereavement', 'telecoms'], value: 'Virgin Media. Phone: 0800 952 2302 (Mon-Sun 8am-9pm). Manages broadband, TV, and phone accounts following bereavement. Contact the bereavement team to discuss options for the account including closure or transfer to another person at the address.' },
+        { key: 'contact_aviva', label: 'Aviva - bereavement contact details', tags: ['aviva', 'insurance', 'pension', 'life insurance', 'bereavement', 'annuity'], value: 'Aviva. Phone: 0345 268 2194 (Mon-Fri 9am-5pm). International: +44 160 360 3851. Online: https://www.aviva.co.uk/help-and-support/contact-us/notify-us-of-a-bereavement/. Handles life insurance claims, pension claims, general insurance policy amendments. Information needed about the deceased: full name, date of birth, home address, policy number(s), date and cause of death, whether they left a will, whether they were married, whether they had children. Information needed about you: your name, relationship to the deceased, your contact details. Aviva has a dedicated bereavement team that handles all product types and will guide you through the specific requirements for each policy.' },
+        { key: 'contact_legal_and_general', label: 'Legal & General - bereavement contact details', tags: ['legal and general', 'l&g', 'lg', 'insurance', 'pension', 'investment', 'life insurance', 'bereavement', 'annuity'], value: 'Legal & General. Contact number, email and form varies depending on the service. Online: https://www.legalandgeneral.com/existing-customers/bereavement/. Processes life insurance, investment, pension, and annuity claims. Documents needed may include death certificate, policy details, claimant ID, and completed claim form. L&G will send claim forms once notified. They have a dedicated bereavement support guide available online.' },
+        { key: 'contact_royal_london', label: 'Royal London - bereavement contact details', tags: ['royal london', 'insurance', 'pension', 'life insurance', 'bereavement', 'mutual'], value: 'Royal London. General number: 0345 646 2092 (8am-6pm Monday-Friday). Phone number varies dependent on policy - fill out online form. Online: https://www.royallondon.com/existing-customers/help-and-support/make-a-claim/tell-us-about-a-bereavement/. Processes life insurance and pension claims. Refunds any overpaid premiums. Information needed: their full name, last known address, date of birth, date they died, any policy or plan numbers, death certificate (may need the certificate number), name of executor if a will has been left. Royal London is a mutual insurer. Their bereavement team will guide claimants through the process and provide claim forms.' },
+        { key: 'contact_scottish_widows', label: 'Scottish Widows - bereavement contact details', tags: ['scottish widows', 'pension', 'life insurance', 'investment', 'bereavement', 'lloyds'], value: 'Scottish Widows. Phone: 0345 601 4179 (Mon-Fri 9am-5pm). Post: Scottish Widows, Bereavement Team, Swindon, SN80 1AA. Online: https://www.scottishwidows.co.uk/contact-us/bereavement.html. Processes pensions, life insurance, and investment claims. Information needed: full name, date of birth and address of the person who has died, your address, contact number and email address, the plan or policy number if you have it. Death certificate or certified copy to email, branch or post. Part of Lloyds Banking Group. If Lloyds, Halifax, or Bank of Scotland have already been informed, you do not need to let Scottish Widows know separately.' },
+        { key: 'contact_peoples_pension', label: 'The People\'s Pension - bereavement contact details', tags: ['peoples pension', 'people\'s pension', 'workplace pension', 'bereavement', 'pension'], value: 'The People\'s Pension. Phone: 0300 2000 555 (Mon-Fri 8:30am-6:00pm). Post: People\'s Pension, Manor Royal, Crawley, RH10 9QP. Can fill in online form. Online: https://www.peoplespension.co.uk/help-and-support/contact-us/bereavement/. Processes claims and helps with queries, concerns or questions you may have. Documents that may be requested: death claim form, will, marriage certificate, civil partnership certificate, proof of ID for spouse/civil partner/any other claimant, grant of probate, evidence of address, evidence of living at the same address as deceased, evidence of relationship to deceased, confirmation of length of relationship. One of the UK\'s largest workplace pension providers.' },
+        { key: 'contact_nest_pensions', label: 'NEST Pensions - bereavement contact details', tags: ['nest', 'nest pensions', 'workplace pension', 'bereavement', 'pension', 'government pension'], value: 'NEST Pensions. Phone: 0300 020 1410 (Mon-Fri 8am-6pm). Can complete online form. Online: https://bereavements.nestpensions.org.uk/bereavements/notify-us-of-a-death. Processes workplace pension death benefits for NEST members. Information needed about the deceased: full name, NEST ID (found on postal communications), date of death and whether it occurred in the UK, death registration details. Information needed about you: full name, relationship to the deceased, date of birth, contact details. You might be asked to provide: deceased member\'s death certificate, proof of your identity, proof of your address, proof of who we should be dealing with, proof of bank account ownership. NEST is the government-backed workplace pension scheme. Benefits are paid at the trustee\'s discretion based on the member\'s nomination and circumstances.' },
+        { key: 'contact_barclaycard', label: 'Barclaycard - bereavement contact details', tags: ['barclaycard', 'credit card', 'bereavement', 'barclays'], value: 'Barclaycard. Phone: 0800 068 2238 (same as Barclays bereavement line, 8am-5pm Monday to Friday, 9am-2pm Saturday). Online form available. Online: https://www.barclaycard.co.uk/personal/help-and-support/help-with-your-barclaycard/bereavement-guide. Freezes the credit card account and manages outstanding balances. Information needed: death certificate, details of all known accounts, executor details.' },
+        { key: 'contact_mbna', label: 'MBNA - bereavement contact details', tags: ['mbna', 'credit card', 'bereavement'], value: 'MBNA. Phone: 0800 015 0012 (Mon-Sunday 8am-6pm). Can use online form. Online: https://www.mbna.co.uk/support/bereavement.html. Manages credit card account closure and outstanding balances. Documents needed: death certificate, proof of identification. Anyone can inform MBNA of a death but to deal with accounts you\'ll need to be either a next of kin, an executor of the deceased\'s will, or a personal representative of the deceased.' },
+        { key: 'contact_american_express', label: 'American Express - bereavement contact details', tags: ['american express', 'amex', 'credit card', 'bereavement'], value: 'American Express. Phone: 01273 576458 or 0800 876 6019 (Mon-Fri 8am-9pm, Saturday 9am-6pm, Sunday 10am-6pm). Email: ukbereavementsupport@aexp.com. Post: American Express Services Europe Limited, Bereavement Support Team, 1 John Street, Upper Ground Floor, Brighton, East Sussex, BN88 1NH. Can complete online form. Online: https://www.americanexpress.com/en-gb/customer-service/challenging-times/life-events/. Cancels cards, manages outstanding balances, processes membership rewards. Information needed: copy of the death certificate, a completed Bereavement Notification form. Membership Rewards points are forfeited upon account closure. Supplementary cards are also cancelled. Any annual fee may be refunded pro-rata.' },
+        { key: 'contact_death_notification_service', label: 'Death Notification Service (DNS) - notify multiple banks at once', tags: ['death notification service', 'dns', 'banks', 'building societies', 'notify', 'bereavement', 'free service'], value: 'Death Notification Service (DNS). Phone: 0333 2076574 (Mon-Fri 8:30-17:30). Online: www.deathnotificationservice.co.uk. A free service that lets you notify multiple banks and building societies of a death with a single phone call. Participating organisations include: Allica Bank, Bank of Scotland, Barclaycard, Barclays, Birmingham Midshires, Cahoot, Black Horse Finance, Cater Allen, Chase Bank, Clerical Medical, First Direct, Halifax, HSBC, IDEM Servicing, Leeds Building Society, Lloyds Bank, Lex Autolease, M&S Bank, Marsden Building Society, MBNA, Moorgate Loan Servicing, Nationwide Building Society, Natwest, Paragon, Rothesay, Royal Bank of Scotland, Santander, Scottish Widows, Shawbrook Bank, St. James\'s Place, The Mortgage Works, UCB Home Loans Ltd, Equiniti, MUFG Corporate Markets, Bank of Scotland - Motor, Bradford & Bingley Insurance (Home only, not mortgages), Budget - Motor and Home, Co-op Ecoinsurance - Motor, Dial - Motor and Home, Geoffrey - Motor, Halifax - Motor, Lloyds - Motor, M&S - Motor, Nutshell - Motor, Post Office - Motor, RAC - Motor and Home, Santander - Motor and Home, Zenith - Motor. Documents needed: death certificate reference number, details of accounts held by the deceased, National Insurance number. Processing time: participating organisations are notified within 2 working days.' },
+        { key: 'contact_bereavement_register', label: 'Bereavement Register - stop unwanted mail', tags: ['bereavement register', 'mail', 'mailing list', 'unwanted post', 'junk mail', 'deceased', 'free service'], value: 'Bereavement Register. Phone: 0800 082 1230. Online: www.thebereavementregister.org.uk. A free service that removes the deceased\'s name from mailing lists to stop unwanted post (marketing mail, catalogues, etc.). Documents needed: name and address of the deceased. Processing time: takes effect within a few weeks, though some mailings may take longer to stop. This does not stop official mail from banks, HMRC, etc. It only reduces marketing and commercial mailings. Registration lasts indefinitely.' },
+        { key: 'info_helpful_links', label: 'Helpful links and resources for bereavement', tags: ['helpful links', 'resources', 'citizens advice', 'money helper', 'bereavement advice centre', 'gov.uk', 'paying bills', 'debts', 'probate', 'insolvent estates', 'valuing estate'], value: 'Helpful links and resources. Paying Bills: Citizens Advice Bureau - citizensadvice.org.uk/family/death-and-wills/dealing-with-thefinancial-affairs-of-someone-who-has-died. Money Helper - moneyhelper.org.uk/en/family-and-care/death-and-bereavement/dealingwith-the-debts-of-someone-who-has-died. Bereavement Advice Centre - bereavementadvice.org/topics/probate-and-legal/insolventestates. General government guidance: https://www.gov.uk/when-someone-dies and https://www.gov.uk/valuing-estate-of-someone-who-died.' },
+        { key: 'info_tell_us_once', label: 'Tell Us Once - detailed guide', tags: ['tell us once', 'government', 'notify', 'dwp', 'hmrc', 'dvla', 'passport', 'council', 'benefits', 'pension', 'registrar'], value: 'Tell Us Once is a service that lets you report a death to most government organisations in one go. You can use it if the person who died was living in England, Scotland or Wales (including if they died abroad temporarily, e.g. on holiday). The death must have been registered or reported to a coroner with a final or interim death certificate. You cannot use Tell Us Once if the person was living in Northern Ireland or living abroad permanently when they died. You can use it if a child or baby has died, but you must tell DWP separately if you get benefits as their parent or carer. How it works: The registrar will explain the service when you register the death. They will either complete it with you or give you a unique reference number to use online or by phone. You must use the service within 28 days of getting your reference number. If you cannot register the death because an inquest is underway, you can still ask a registrar for a unique reference number - you\'ll need to get an interim death certificate from the coroner first.' },
+        { key: 'info_tell_us_once_details', label: 'Tell Us Once - information needed and organisations contacted', tags: ['tell us once', 'information needed', 'organisations', 'hmrc', 'dwp', 'dvla', 'passport', 'council', 'veterans', 'pension schemes', 'nhs pension', 'armed forces'], value: 'Tell Us Once - information you\'ll need. About the deceased: surname, date they died, name/address/contact details of executor or administrator, details of surviving spouse or civil partner (name, address, phone, NI number or date of birth), or if no surviving spouse then next of kin details, name and address of institution if they died in hospital/nursing home/care home/hospice. You may also need: British passport number and town of birth, driving licence number, vehicle registration numbers, Council Tax and local council services details, Blue Badge number, details of benefits or State Pension, Armed Forces Pension or Compensation Scheme details, public sector pension scheme details. National Insurance number is needed if paying into: NHS Pensions (England and Wales), Scottish Public Pension Agency schemes, Pension Protection Fund and Financial Assistance Scheme, Local Government Pension Schemes (LGPS). You need permission from any surviving spouse/civil partner, next of kin, executor, administrator, or anyone claiming joint benefits before giving their details. Organisations Tell Us Once will notify: HMRC (personal tax and benefits like Child Benefit), DWP (benefits and entitlements like Universal Credit or State Pension), Passport Office, DVLA (cancel licence, remove keeper from up to 5 vehicles, end vehicle tax), local council (Housing Benefit, Council Tax Reduction, Blue Badge, council housing services, electoral register), Veterans UK (Armed Forces Compensation Scheme), Social Security Scotland (Scottish Government benefits like Scottish Child Payment). HMRC and DWP will contact you about the tax, benefits and entitlements of the person who died. Tell Us Once will also notify some public sector pension schemes: Armed Forces Pension Scheme, NHS Pensions (England and Wales), Scottish Public Pension Agency schemes, Pension Protection Fund and Financial Assistance Scheme, Local Government Pension Schemes (LGPS). What Tell Us Once does NOT cover: banks, mortgage providers, insurance providers, utility companies, landlords, housing associations, personal or workplace pension schemes (unless they\'re one of the public sector schemes listed). After using Tell Us Once, you\'ll still need to contact these organisations yourself. You may also need to: update property records, contact DVLA about vehicles you\'re keeping, contact HMRC about business taxes like VAT, contact the Student Loans Company, contact DWP if a child has died and you get benefits as their parent/carer. If you do not use Tell Us Once, you must let the relevant organisations know about the death yourself.' },
+        { key: 'info_register_death', label: 'Registering a death - detailed guide', tags: ['register death', 'registering', 'death registration', 'medical examiner', 'registrar', 'death certificate', 'green form', 'burial', 'cremation', 'five days', '5 days'], value: 'Registering a death. After someone dies, their doctor must confirm the death before contacting the medical examiner. This can take a few days. A medical examiner (a senior doctor not involved in the person\'s care) will check the cause of death is accurate. The medical examiner\'s office will then contact you to explain the cause of death and answer any questions about the healthcare provided - this is voluntary and you do not have to speak to them. You must wait for the medical examiner\'s office to confirm you can register the death. Register the death within 5 days (8 days in Scotland) of getting confirmation - this includes weekends and bank holidays. If you need more than 5 days, tell the register office immediately. Information needed to register the death: MCCD (sent electronically on your behalf), full name (and maiden name where appropriate), date and place of birth, occupation, name/date of birth/occupation of any surviving spouse, usual permanent address, details of any war pensions, medical card if you have it (the registrar will keep this). The registrar will explain the Tell Us Once service when you register the death.' },
+        { key: 'info_after_registration', label: 'After registering a death - what you receive', tags: ['death certificate', 'green form', 'burial certificate', 'cremation certificate', 'funeral', 'registrar', 'copies', 'extra copies'], value: 'After registering the death, the registrar will send you: The death certificate - the Registry Office will charge a fee for this and for any extra copies you may need for banks or insurance companies. It is a good idea to buy as many copies at the time of registration to cover your needs. You can ask for additional death certificates at a later date but there will be another charge. The green form - this is the certificate that needs to be given to your funeral director so that a burial or cremation can be arranged. If you give the Registrar your funeral director\'s email address, they can also send this directly to them. You must give the certificate to your funeral director, crematorium or burial authority before the funeral can take place.' },
+        { key: 'info_death_in_hospital', label: 'When someone dies in hospital', tags: ['hospital', 'death in hospital', 'mccd', 'medical certificate', 'bereavement centre', 'mortuary', 'coroner'], value: 'When someone dies in hospital: The medical team is responsible for completing a Medical Certificate of Cause of Death (MCCD). This will take place after the death has been reviewed by the independent Medical Examiner. In some circumstances, a death may need to be referred to the Coroner for further investigation. The Bereavement Centre will be notified of the death and your loved one will be taken to the hospital mortuary. Please contact the Bereavement Centre as soon as you are able to and give them contact details of who will be responsible for registering the death and arranging the funeral. They will talk you through all the necessary steps and be able to answer any questions. Staff in the Bereavement Centre will contact your loved one\'s GP to let them know about the death.' },
+        { key: 'info_ordering_death_certificates', label: 'Ordering copies of the death certificate', tags: ['death certificate', 'copies', 'order', 'general register office', 'gro', 'certificate copies'], value: 'Ordering a copy of the death certificate: Contact the General Register Office for help ordering a certificate or questions about an order. You can use the online form to contact the GRO or contact them by telephone. General Register Office. Telephone: 0300 123 1837. Textphone: 18001 0300 123 1837. Monday to Friday, 8am to 6pm. Postal address: General Register Office, PO Box 2, Southport, PR8 2JD.' },
+        { key: 'info_bsp_eligibility', label: 'Bereavement Support Payment - eligibility', tags: ['bereavement support payment', 'bsp', 'eligibility', 'benefits', 'partner died', 'national insurance', 'means tested', 'state pension age'], value: 'Bereavement Support Payment (BSP) - Eligibility. You may be able to get BSP if your partner has died. It has replaced Widowed Parent\'s Allowance, Bereavement Allowance (previously Widow\'s Pension), and Bereavement Payment. BSP is not means-tested - what you earn or have in savings will not affect what you get. When your partner died, you must have been: under State Pension age, living in the UK or a country that pays bereavement benefits, and married to your partner, in a civil partnership with them, or living with them as if you were married. Your partner must have either: paid a certain amount of Class 1 or Class 2 National Insurance contributions in any one tax year since 6 April 1975, or died because of an accident at work or a disease caused by work. You can still make a claim if you\'re not sure whether your partner paid enough NI contributions - the Bereavement Service will let you know. You cannot claim BSP if you\'re in prison. If your partner died before 6 April 2017, you may be able to get Widowed Parent\'s Allowance instead.' },
+        { key: 'info_bsp_rates', label: 'Bereavement Support Payment - rates and amounts', tags: ['bereavement support payment', 'bsp', 'rates', 'amounts', 'higher rate', 'lower rate', 'monthly payments', 'lump sum', 'cohabiting'], value: 'Bereavement Support Payment - rates. The amount depends on your relationship to the person who died, when you make your claim, and when you reach State Pension age. If you were married or in a registered civil partnership - Higher rate (if you were getting Child Benefit for a child that lived with you, were told you were entitled to Child Benefit, or were pregnant): one-off payment of \u00a33,500 plus 18 monthly payments of \u00a3350. Lower rate (if not eligible for higher rate): one-off payment of \u00a32,500 plus 18 monthly payments of \u00a3100. If you were living together as if you were married (cohabiting) - the most you can get is: one-off payment of \u00a33,500 plus 18 monthly payments of \u00a3350. If your partner was getting or entitled to Child Benefit instead, you\'ll need to make a new claim for Child Benefit in your name before you can apply for BSP. Payments will be paid into your bank, building society or credit union account.' },
+        { key: 'info_bsp_claiming', label: 'Bereavement Support Payment - when and how to claim', tags: ['bereavement support payment', 'bsp', 'claim', 'how to claim', 'deadline', 'time limit', 'online', 'phone', 'post', 'bsp1', 'bereavement service helpline'], value: 'Bereavement Support Payment - when and how to claim. You usually need to make a claim within 21 months of your partner\'s death. If it\'s been over 21 months, you may still be able to claim if the cause of death was only recently confirmed - call the Bereavement Service helpline for help. Claim timing affects how much you get: Within 3 months of death = full one-off payment + all 18 monthly payments. 3-12 months after death = one-off payment + only some monthly payments. 12-21 months after death = no one-off payment, but some monthly payments. Over 21 months = usually cannot get any payments. BSP will not affect your other benefits for a year after your first payment. After a year, money left from your first payment could affect benefit renewals. You must tell your benefits office (e.g. local Jobcentre Plus) when you start getting BSP. How to claim: Online at https://www.gov.uk/bereavement-support-payment/how-to-claim. By phone: Bereavement Service helpline 0800 151 2012, Welsh language 0800 731 0453, Relay UK 18001 then 0800 151 2012. Monday to Friday, 8am to 6pm. By post: download BSP1 form or contact the helpline to get one. Send to the address on the form. Northern Ireland has a different process for both phone and post. If you\'re abroad: International Pension Centre, telephone +44 (0) 191 206 9390, Relay UK +44 151 494 1260 then 0191 206 9390, Monday to Friday 8am to 6pm. To apply, you\'ll need: your National Insurance number, your bank or building society account details, the date your partner died, your partner\'s National Insurance number.' },
+        { key: 'info_bereavement_leave', label: 'Bereavement Leave - employment rights', tags: ['bereavement leave', 'employment rights', 'time off', 'work', 'employer', 'statutory', 'employment rights act', 'pregnancy loss', 'redundancy', 'dismissal'], value: 'Bereavement Leave. The Employment Rights Act establishes an entitlement to Bereavement Leave. This act is expected to be commenced in 2027. It is a day one unpaid right to protected time off for employees to grieve the loss of a loved one, including pregnancy loss. It will provide a clear baseline for employers and protect employees who might not have otherwise received time off. The Act sets out that the leave duration must be a minimum of one week, and the bereaved person must have at least 56 days to take the leave, although both could be extended further in regulations. It also provides protection around redundancy and dismissal. Currently there is no statutory right for employees to take bereavement leave following a death (except for parents who lose a child aged under 18, or stillborn from 24 weeks). While most employers respond compassionately, the absence of legislation means some employees may not be provided appropriate time off to grieve. The Employment Rights Act introduces a new statutory right to unpaid Bereavement Leave - available from day one of employment and covering a wider range of situations than before, including pregnancy loss. The measures in the Act set a framework and require the Secretary of State to make regulations giving an entitlement to protected time off for bereaved employees.' },
+        { key: 'info_intestacy_overview', label: 'Intestacy rules - what happens when there is no will', tags: ['intestacy', 'no will', 'rules of intestacy', 'inherit', 'estate', 'who inherits', 'without a will'], value: 'Intestacy rules (England and Wales). When a person dies without leaving a will, their estate has to be shared out according to certain rules called the rules of intestacy. A person\'s estate is made up of their money and property. A person who dies without a will is called an intestate person. Usually married partners, civil partners, and some relatives can inherit under the rules of intestacy. However, the rules can be complicated - check if you can inherit if someone dies without a valid will on GOV.UK. This advice applies to England and Wales. Different rules apply in Scotland and Northern Ireland.' },
+        { key: 'info_intestacy_married', label: 'Intestacy - married partners and civil partners', tags: ['intestacy', 'married', 'civil partner', 'spouse', 'inherit', 'separated', 'divorced', '322000', 'threshold'], value: 'Intestacy - married partners and civil partners. People who were married or in a civil partnership with the person when they died can inherit under the rules of intestacy. This includes if they were separated but still married. Without a valid will, a person cannot inherit if: they were divorced from the person who died, or their civil partnership had legally ended when the person died. If there are children and the estate is valued at more than \u00a3322,000, the inheritance is divided between the partner and the children. If the estate is \u00a3322,000 or less then the children do not inherit. The partner inherits: all the personal property and belongings of the person who has died, the first \u00a3322,000 of the estate, and half of the remaining estate. The children will inherit the other half of the remaining estate, divided equally between them.' },
+        { key: 'info_intestacy_children', label: 'Intestacy - children\'s inheritance rights', tags: ['intestacy', 'children', 'inherit', 'adopted', 'step-children', 'under 18', 'trust', 'trustee', 'grandchildren'], value: 'Intestacy - children\'s inheritance rights. The amount a child inherits depends on: how many children the person who died had, and whether the deceased had a surviving married or civil partner. All children inherit an equal amount regardless of who their other parent is. A child can inherit whether their parents were ever married or not. A child adopted by the person who died can inherit, including step-children who have been adopted by their step-parent. Step-children who were not adopted by the person who died cannot inherit under the rules of intestacy. If a child is under 18, they cannot receive their inheritance until they\'re 18 - it will be held in a trust managed by an adult trustee. If the person who died had no surviving married or civil partner: the children inherit the whole estate, divided equally, regardless of the estate\'s value. If there is a surviving married or civil partner: a child only inherits if the estate is valued at over \u00a3322,000. Grandchildren and great-grandchildren can only inherit if their parent or grandparent died before the intestate person, or if their parent was alive when the intestate person died but dies before reaching 18. They inherit equal shares of what their parent or grandparent would have been entitled to.' },
+        { key: 'info_intestacy_joint_property', label: 'Intestacy - jointly-owned property and bank accounts', tags: ['intestacy', 'joint property', 'jointly owned', 'joint tenants', 'tenants in common', 'joint bank account', 'beneficial joint tenancy'], value: 'Intestacy - jointly-owned property. Couples may jointly own their home in two ways: beneficial joint tenancies and tenancies in common. If the partners were beneficial joint tenants at the time of death, the surviving partner will automatically inherit the other partner\'s share of the property. However, if the partners are tenants in common, the surviving partner does not automatically inherit the other person\'s share. Couples may also have joint bank or building society accounts. If one dies, the other partner will automatically inherit the whole of the money. Property and money that the surviving partner inherits through joint ownership does not count as part of the estate when it is being valued for the intestacy rules.' },
+        { key: 'info_intestacy_no_relatives', label: 'Intestacy - bona vacantia and changing inheritance', tags: ['intestacy', 'bona vacantia', 'no relatives', 'crown', 'treasury solicitor', 'deed of family arrangement', 'deed of variation', 'disclaiming', 'rejecting inheritance'], value: 'Intestacy - bona vacantia, changing inheritance, and disclaiming. If there are no surviving relatives who can inherit under the rules of intestacy, the estate passes to the Crown - this is called bona vacantia. The Treasury Solicitor deals with the estate. The Crown can make grants from the estate but does not have to. If you\'re not a surviving relative but believe you have a good reason to apply for a grant, you\'ll need legal advice. Changing who gets what: The people who inherit can share out the estate differently to what the rules of intestacy say if everyone over 18 who would inherit agrees and it\'s done within 2 years of the death. This is called a deed of family arrangement or variation. It can also be used to give money or property to people who cannot inherit under the rules of intestacy. You should get legal advice for this. If you cannot inherit: you can ask the people who did inherit to change how the estate is shared (everyone must agree). If the death left you significantly worse off, you might be able to go to court to apply for financial provision from the estate. Rejecting your inheritance (disclaiming): You might want to reject money or property you\'re going to inherit. If you disclaim your inheritance, it will usually go to the next person entitled under the intestacy rules. If you claim benefits, your inheritance might change what benefits you\'re entitled to. You should get legal advice before rejecting an inheritance.' },
+        { key: 'info_probate_overview', label: 'Probate - what it is and when it\'s needed', tags: ['probate', 'grant of probate', 'letters of administration', 'estate', 'legal right', 'when needed', 'not needed'], value: 'Probate is the legal right to deal with someone\'s property, money and possessions (their estate) when they die. You should not make any financial plans or put property on the market until you\'ve got probate. Different rules apply in Scotland and Northern Ireland. Before applying, you must check: that probate is needed, that you\'re eligible to apply, and whether there\'s Inheritance Tax to pay. You can check if probate has already been issued by searching the probate records. You may not need probate if the person who died: only had savings, owned shares or money with others (this automatically passes to the surviving owners unless they have agreed otherwise), or owned land or property as joint tenants with others (this automatically passes to the surviving owners). Contact the financial organisations the person used (e.g. their bank and mortgage company) to find out if you\'ll need probate - every organisation has its own rules.' },
+        { key: 'info_probate_who_can_apply', label: 'Probate - who can apply', tags: ['probate', 'executor', 'administrator', 'apply', 'will', 'no will', 'closest relative'], value: 'Probate - who can apply. Only certain people can apply for probate. Who can apply depends on whether or not there\'s a will. If there\'s a will: executors named in it can apply. If there\'s not a will: the closest living relative can apply.' },
+        { key: 'info_probate_iht', label: 'Probate - valuing the estate and Inheritance Tax', tags: ['probate', 'inheritance tax', 'iht', 'iht400', 'valuing estate', 'estate value'], value: 'Probate - valuing the estate and Inheritance Tax. Before applying for probate, you must find out if you need to pay Inheritance Tax. You need to estimate the value of the estate (the money, property and possessions of the person who\'s died). If the estate owes Inheritance Tax, you must report its value within one year using form IHT400. You cannot apply for probate until you have done this. You\'ll normally have to start paying Inheritance Tax before probate is granted. Even if there\'s no tax to pay, you\'ll need the estimated value of the estate as part of your probate application. You can apply for probate online or by post after you\'ve valued the estate.' },
+        { key: 'info_probate_with_will', label: 'Probate - if there\'s a will (executors)', tags: ['probate', 'will', 'executor', 'codicil', 'original will', 'probate registry', 'pa13', 'lost will', 'multiple executors', 'beneficiary'], value: 'Probate - if there\'s a will. You can apply for probate if you\'re named as an executor in either the will or an update to it (known as a codicil). The person who died will normally have told you if you\'re an executor. You\'ll only inherit assets if you\'re also named as a beneficiary in the will. Before you apply, you need to estimate the value of the estate. Finding the original will: You\'ll need to send the original will with your probate application - you cannot use a photocopy. The probate registry will keep the will and it\'ll become a public record. The person who died should have told the executors where to find the original will, e.g. at their house, with a solicitor, or at the national probate registry in Newcastle (you\'ll need the death certificate and evidence you\'re the executor). If there\'s more than one will, send in the most recent one. Do not destroy any copies of earlier wills until you\'ve received probate. If the original will is lost, you may be able to apply for probate with form PA13. If there are more than one executor: you must all agree who makes the application. Up to 4 executors can be named on the application. If only one executor is named, they\'ll need to prove they tried to contact all executors named in the will before they applied.' },
+        { key: 'info_probate_executor_options', label: 'Probate - executor options (power reserved, renunciation, appointing someone)', tags: ['probate', 'executor', 'power reserved', 'renunciation', 'pa15', 'pa11', 'pa14', 'appoint', 'unable to apply', 'mental health', 'substitute', 'attorney', 'epa', 'lpa'], value: 'Probate - executor options. If you do not want to be an executor, you have several options: (1) Keep the right to apply later (power reserved) - if more than one executor is named, you can choose not to apply now but reserve the right to apply later. Tell the person making the application in writing. (2) Give up your right to apply permanently (renunciation) - fill in form PA15. (3) Appoint someone to apply on your behalf - you can do this if you\'re the only executor named or if all other executors are either holding power reserved or have renounced. Fill in form PA11, or alternatively appoint an attorney using a signed enduring power of attorney (EPA) or registered lasting power of attorney (LPA). If an executor is unable to apply (e.g. they have died or have a mental health condition): If they have a mental health condition or impairment, a medical professional must fill in form PA14 before anyone applies. Check if the will has a named substitute executor. If there\'s no substitute but other executors can apply, they can apply straight away. If there are no other executors and no substitute, another entitled person will need to apply - if the executor died, this is any beneficiary of the will who wants to apply. If the executor has a mental health condition, one of the following can apply: the executor\'s court appointed deputy, someone with power of attorney for the executor, or a beneficiary of the will. Stopping a probate application: You can challenge an application for probate (enter a caveat) before it\'s granted, for example if there\'s a dispute about who can apply or whether there\'s a will.' },
+
 
       ]
     },
@@ -8429,6 +9013,22 @@ Please write the personalised bereavement plan sections for ${callerName}. Remem
       <p style="font-size:11px;color:var(--midnight-slate);margin-top:4px;">Your key is stored locally in this browser only and is never sent anywhere except the Anthropic API.</p>
     </div>
 
+    <div style="margin-bottom:16px;">
+      <label style="display:block;font-size:12px;font-weight:600;color:var(--ink);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">Plan Generation Mode</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;" id="genModeSelector">
+        <label style="display:flex;align-items:center;gap:6px;padding:8px 14px;border:1px solid var(--gone-but-golden);border-radius:8px;cursor:pointer;font-size:13px;font-family:var(--font-primary);color:var(--ink);transition:all 0.15s;">
+          <input type="radio" name="genMode" value="template" style="accent-color:var(--freshly-dug);" /> Template
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;padding:8px 14px;border:1px solid var(--gone-but-golden);border-radius:8px;cursor:pointer;font-size:13px;font-family:var(--font-primary);color:var(--ink);transition:all 0.15s;">
+          <input type="radio" name="genMode" value="hybrid" style="accent-color:var(--freshly-dug);" /> Hybrid (recommended)
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;padding:8px 14px;border:1px solid var(--gone-but-golden);border-radius:8px;cursor:pointer;font-size:13px;font-family:var(--font-primary);color:var(--ink);transition:all 0.15s;">
+          <input type="radio" name="genMode" value="ai" style="accent-color:var(--freshly-dug);" /> Full AI
+        </label>
+      </div>
+      <p style="font-size:11px;color:var(--midnight-slate);margin-top:4px;"><strong>Template:</strong> instant, deterministic. <strong>Hybrid:</strong> JS controls structure, AI writes prose per section, editable. <strong>Full AI:</strong> entire plan written by Claude.</p>
+    </div>
+
     <div id="aiKeyStatus" style="margin-bottom:16px;padding:10px 14px;border-radius:8px;font-size:13px;display:none;"></div>
 
     <div style="display:flex;gap:10px;justify-content:flex-end;">
@@ -8451,6 +9051,15 @@ window.openAISettings = function() {
     input.value = '';
     updateAIKeyStatus(false);
   }
+  // Set generation mode radio
+  var currentMode = getGenerationMode();
+  var radios = document.querySelectorAll('input[name="genMode"]');
+  radios.forEach(function(r) {
+    r.checked = (r.value === currentMode);
+    r.addEventListener('change', function() {
+      if (r.checked) setGenerationMode(r.value);
+    });
+  });
 };
 
 window.closeAISettings = function() {
