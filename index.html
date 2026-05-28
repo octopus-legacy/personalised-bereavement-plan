@@ -1537,6 +1537,14 @@
     border: 1px solid var(--gone-but-golden);
   }
   .plan-section-cancel-btn:hover { border-color: var(--midnight-slate); }
+  .plan-section-remove-btn {
+    margin-left: auto;
+    background: #fff;
+    color: #D32F2F;
+    border: 1px solid #D32F2F;
+    font-size: 12px;
+  }
+  .plan-section-remove-btn:hover { background: #D32F2F; color: #fff; }
   .plan-section.section-editing .plan-section-body [contenteditable="true"] {
     outline: 1px dashed var(--gone-but-golden);
     outline-offset: 2px;
@@ -6141,7 +6149,8 @@ Write a personalised version of each text block for ${callerName}.`;
     // Match against KB contact entry tags — skip generic category tags
     var genericTags = new Set(['bank', 'bereavement', 'utility', 'energy', 'telecoms', 'mobile',
       'phone', 'gas', 'electricity', 'tv', 'broadband', 'cable', 'pension', 'insurance',
-      'credit card', 'mortgage', 'government pension', 'workplace pension']);
+      'credit card', 'mortgage', 'government pension', 'workplace pension',
+      'three', '3']);  // 'three'/'3' are common English words — use 'three mobile' tag instead
     var matched = [];
     contactEntries.forEach(function(entry) {
       var found = entry.tags.some(function(tag) {
@@ -6190,7 +6199,8 @@ Write a personalised version of each text block for ${callerName}.`;
     // Match against KB contact entry tags — skip generic category tags
     var genericTags = new Set(['bank', 'bereavement', 'utility', 'energy', 'telecoms', 'mobile',
       'phone', 'gas', 'electricity', 'tv', 'broadband', 'cable', 'pension', 'insurance',
-      'credit card', 'mortgage', 'government pension', 'workplace pension']);
+      'credit card', 'mortgage', 'government pension', 'workplace pension',
+      'three', '3']);  // 'three'/'3' are common English words — use 'three mobile' tag instead
     var matched = [];
     contactEntries.forEach(function(entry) {
       var found = entry.tags.some(function(tag) {
@@ -7565,6 +7575,7 @@ Write a personalised version of each text block for ${callerName}.`;
         <div class="plan-section-edit-actions">
           <button type="button" class="plan-section-save-btn" onclick="saveSectionEdit(this)">Save</button>
           <button type="button" class="plan-section-cancel-btn" onclick="cancelSectionEdit(this)">Cancel</button>
+          <button type="button" class="plan-section-remove-btn" onclick="removeSectionFromPlan(this)">Remove Section</button>
         </div>
       </div>
     `;
@@ -8476,6 +8487,20 @@ Write a personalised version of each text block for ${callerName}.`;
     showToast('Changes discarded.', 'info');
   }
 
+  function removeSectionFromPlan(actionBtn) {
+    var section = actionBtn.closest('.plan-section');
+    if (!section) return;
+    var title = section.querySelector('.plan-section-header h3');
+    var name = title ? title.textContent.trim() : 'this section';
+    if (!confirm('Remove "' + name + '" from the plan? This cannot be undone.')) return;
+    section.classList.add('plan-deleting');
+    setTimeout(function() {
+      section.remove();
+      savePlanToStorage();
+      showToast('Section removed.', 'success');
+    }, 400);
+  }
+
   function downloadPlanPDF() {
     var el = getPlanElement();
     var statusEl = document.getElementById('emailStatus');
@@ -9160,7 +9185,7 @@ Write a personalised version of each text block for ${callerName}.`;
         { key: 'contact_ee', label: 'EE - bereavement contact details', tags: ['ee', 't-mobile', 'orange', 'mobile', 'phone', 'bereavement', 'telecoms'], value: 'EE (including T-Mobile and Orange legacy accounts). Phone: 07953 966 250. Can also use online bereavement form. Online: ee.co.uk/help/contact-ee/account-holder-passed. Cancels contract, waives early termination fees, manages device payments. Documents needed: death certificate, account holder details, proof of relationship.' },
         { key: 'contact_vodafone', label: 'Vodafone - bereavement contact details', tags: ['vodafone', 'mobile', 'phone', 'broadband', 'bereavement', 'telecoms'], value: 'Vodafone. Phone: 0808 005 7450 (Mon-Fri 8am-10pm, Sat-Sun 8am-8pm). Can also use online bereavement form. Online: www.vodafone.co.uk/help-and-information/bereavement. Cancels mobile contract, manages broadband accounts. Information needed: the type of account they had (mobile, broadband, or both), their full name, date of birth, mobile number, address, and death certificate registration number.' },
         { key: 'contact_o2', label: 'O2 - bereavement contact details', tags: ['o2', 'virgin media o2', 'mobile', 'phone', 'bereavement', 'telecoms'], value: 'O2. Phone: 0800 090 1820 (Mon-Sun 8am-9pm). Email: Bereavement&CriticalIllness@virginmediao2.co.uk. Post: O2 Bereavement Team, PO Box Virgin Media O2, Sunderland, SR43 4AA. Online: www.o2.co.uk/help/account/manage-your-account/bereavement. Cancels mobile contract, clears remaining balances, manages Virgin Media O2 joint services. Information needed: account number, mobile number, your full name, your address, your contact number/email address, your relationship to the account holder, a forwarding address for any future correspondence. Processing: disconnection request within 7 working days, up to 14 days to clear any remaining balance.' },
-        { key: 'contact_three', label: 'Three - bereavement contact details', tags: ['three', '3', 'mobile', 'phone', 'bereavement', 'telecoms'], value: 'Three. Phone: 0333 338 1400 (Mon-Fri 8am-8pm, Sat-Sun 9am-6pm). Can also use online bereavement form. Online: www.three.co.uk/vulnerability/major-life-event/bereavement-support. Can close the account, transfer account ownership to someone else, or move the phone number to another network provider. Information needed: the account holder\'s account or mobile number, their full name, date of birth, address, death certificate number, name of the Registrar, district where the death certificate was issued.' },
+        { key: 'contact_three', label: 'Three - bereavement contact details', tags: ['three mobile', 'three network', 'mobile', 'phone', 'bereavement', 'telecoms'], value: 'Three. Phone: 0333 338 1400 (Mon-Fri 8am-8pm, Sat-Sun 9am-6pm). Can also use online bereavement form. Online: www.three.co.uk/vulnerability/major-life-event/bereavement-support. Can close the account, transfer account ownership to someone else, or move the phone number to another network provider. Information needed: the account holder\'s account or mobile number, their full name, date of birth, address, death certificate number, name of the Registrar, district where the death certificate was issued.' },
         { key: 'contact_bt', label: 'BT (British Telecom) - bereavement contact details', tags: ['bt', 'british telecom', 'broadband', 'tv', 'home phone', 'landline', 'bereavement', 'telecoms'], value: 'BT (British Telecom). Phone: 0800 169 1663 (Mon-Fri 8am-9pm, Sat-Sun 8am-8pm). Can also use online form. Online: www.bt.com/help/account-and-billing/manage-account/bereavement---bt-account-holder. Manages BT broadband, TV, and landline accounts. Can change the name of the account holder or close the account. Information needed: account holder\'s name, account number, date of birth, address; your name, address, and relationship to the deceased.' },
         { key: 'contact_sky', label: 'Sky - bereavement contact details', tags: ['sky', 'tv', 'broadband', 'mobile', 'bereavement', 'telecoms'], value: 'Sky. Phone: 0333 2020 912 (Mon-Fri 8:30am-7:30pm, Sat 8:30am-5pm). Can also SMS text to 07360268288 (Mon-Fri 9am-5pm, Sat 9am-4pm). Online: www.sky.com/help/articles/deceased-sky-account-holder. Cancels or changes ownership of Sky TV, broadband, and mobile contracts. Information needed: Sky account number or registered email address. Processing time: 7-14 working days.' },
         { key: 'contact_virgin_media', label: 'Virgin Media - bereavement contact details', tags: ['virgin media', 'virgin', 'broadband', 'tv', 'cable', 'bereavement', 'telecoms'], value: 'Virgin Media. Phone: 0800 952 2302 (Mon-Sun 8am-9pm). Manages broadband, TV, and phone accounts following bereavement. Contact the bereavement team to discuss options for the account including closure or transfer to another person at the address.' },
