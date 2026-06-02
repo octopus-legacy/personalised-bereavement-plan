@@ -2445,37 +2445,14 @@
         </div>
       </div>
 
-      <!-- SECTION 4: How Are You Feeling (was section 9) -->
+      <!-- SECTION 4: What Have You Done So Far (renumbered from 5) -->
       <div class="form-section" id="section-4">
         <div class="section-header" onclick="toggleSection(4)">
           <div class="num">4</div>
-          <div class="titles"><h2>How Are You Feeling?</h2><div class="sub">There's no right or wrong answer here</div></div>
-          <span class="chevron">&#9662;</span>
-        </div>
-        <div class="section-body" id="body-4" style="display:flex;flex-direction:column;gap:18px;">
-          <div class="field-group">
-            <label>How would you say you're feeling at the moment?</label>
-            <textarea name="caller_feeling" rows="3" placeholder="e.g. I'm just feeling really lost, I don't know where to start..."></textarea>
-          </div>
-          <div class="field-group">
-            <label>Would you like us to look into bereavement counselling for you?</label>
-            <div class="inline-check">
-              <label><input type="radio" name="counselling_referral" value="yes"> Yes</label>
-              <label><input type="radio" name="counselling_referral" value="no"> No</label>
-              <label><input type="radio" name="counselling_referral" value="already"> Already receiving</label>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- SECTION 5: What Matters Most Right Now (was section 4) -->
-      <div class="form-section" id="section-5">
-        <div class="section-header" onclick="toggleSection(5)">
-          <div class="num">5</div>
           <div class="titles"><h2>What Have You Done So Far?</h2><div class="sub">Tick anything the caller has already started or completed</div></div>
           <span class="chevron">&#9662;</span>
         </div>
-        <div class="section-body" id="body-5">
+        <div class="section-body" id="body-4">
           <div class="topic-list">
 
             <div class="topic-item">
@@ -2711,7 +2688,7 @@
           <span class="chevron">&#9662;</span>
         </div>
         <div class="section-body" style="display:flex;flex-direction:column;gap:16px;">
-          <div class="field-group"><label>Do you know if they left a will?</label>
+          <div class="field-group"><label data-rel-label="Do you know if {they} left a will?">Do you know if they left a will?</label>
             <div class="inline-check">
               <label><input type="radio" name="has_will" value="yes"> Yes</label>
               <label><input type="radio" name="has_will" value="no"> No</label>
@@ -2755,21 +2732,29 @@
             <div class="field-group"><label>What arrangements have been made so far?</label>
               <textarea name="ic_funeral_detail" rows="3" placeholder="E.g. spoken to a funeral director, chosen a date, booked a venue..."></textarea></div>
           </div>
+          <div id="funeralTakenPlace" style="display:none;margin-top:12px;">
+            <div class="field-group"><label>Has the funeral already taken place?</label>
+              <div class="inline-check">
+                <label><input type="radio" name="funeral_taken_place" value="yes"> Yes</label>
+                <label><input type="radio" name="funeral_taken_place" value="no"> Not yet</label>
+              </div></div>
+          </div>
 
-          <div class="field-group" style="margin-top:12px"><label>Do you know if there was a pre-paid funeral plan in place?</label>
+          <div id="funeralNotYetQuestions" style="margin-top:12px;">
+          <div class="field-group"><label data-rel-label="Do you know if {they} had a pre-paid funeral plan in place?">Do you know if there was a pre-paid funeral plan in place?</label>
             <div class="inline-check">
               <label><input type="radio" name="funeral_plan" value="yes"> Yes</label>
               <label><input type="radio" name="funeral_plan" value="no"> No</label>
               <label><input type="radio" name="funeral_plan" value="unsure"> I'm not sure</label>
             </div></div>
-          <div id="funeralPlanYesDetail" class="field-group" style="margin-top:12px;display:none"><label>Any details about the plan - like who it's with or anything they've told you?</label>
+          <div id="funeralPlanYesDetail" class="field-group" style="margin-top:12px;display:none"><label data-rel-label="Any details about the plan - like who it's with or anything {they} told you?">Any details about the plan - like who it's with or anything they've told you?</label>
             <textarea name="funeral_plan_notes" rows="2" placeholder="e.g. It's with Co-op, they arranged it a few years ago..."></textarea></div>
 
           <div id="funeralPlanFollowUp" style="display:none;">
-            <div class="field-group" style="margin-top:12px"><label>Do you know if they had any funeral wishes - anything they'd mentioned about how they'd like things done?</label>
+            <div class="field-group" style="margin-top:12px"><label data-rel-label="Do you know if {they} had any funeral wishes — anything {they} had mentioned about how {they}'d like things done?">Do you know if they had any funeral wishes - anything they'd mentioned about how they'd like things done?</label>
               <textarea name="funeral_wishes" rows="3" placeholder="E.g. burial vs cremation, a particular place, readings, dress code, anything they'd talked about..."></textarea></div>
 
-            <div class="field-group" style="margin-top:12px"><label>Did they have a favourite song, band, or piece of music that meant something to them?</label>
+            <div class="field-group" style="margin-top:12px"><label data-rel-label="Did {they} have a favourite song, band, or piece of music that meant something to {them}?">Did they have a favourite song, band, or piece of music that meant something to them?</label>
               <textarea name="funeral_music" rows="2" placeholder="This can be a lovely personal touch - even if you're not sure yet, it's worth noting down..."></textarea></div>
 
             <div class="field-group" style="margin-top:12px"><label>Is there anything else you'd like included - a favourite poem, a reading, flowers, a charity for donations?</label>
@@ -2796,6 +2781,7 @@
                 </div>
               </div>
             </div>
+          </div>
           </div>
         </div>
       </div>
@@ -2838,6 +2824,7 @@
               <label><input type="checkbox" name="org_bank"> Bank(s)</label>
               <label><input type="checkbox" name="org_pension"> Pension provider(s)</label>
               <label><input type="checkbox" name="org_insurance"> Insurance</label>
+              <label><input type="checkbox" name="org_home_insurance"> Home insurance (urgent - notify insurer if property is unoccupied)</label>
               <label><input type="checkbox" name="org_employer"> Their employer</label>
               <label><input type="checkbox" name="org_gp"> GP / NHS</label>
               <label><input type="checkbox" name="org_dvla"> DVLA</label>
@@ -2846,7 +2833,7 @@
               <label><input type="checkbox" name="org_tv"> TV Licence</label>
             </div>
           </div>
-          <div class="field-group" style="margin-top:16px"><label>Do you know of any online accounts they had?</label>
+          <div class="field-group" style="margin-top:16px"><label data-rel-label="Do you know of any online accounts {they} had?">Do you know of any online accounts they had?</label>
             <textarea name="digital_accounts" rows="2" placeholder="e.g. Facebook, Gmail, Netflix, Amazon..."></textarea></div>
         </div>
       </div>
@@ -2859,7 +2846,7 @@
           <span class="chevron">&#9662;</span>
         </div>
         <div class="section-body">
-          <div class="field-group"><label>Do you know which bank or banks they used?</label>
+          <div class="field-group"><label data-rel-label="Do you know which bank or banks {they} used?">Do you know which bank or banks they used?</label>
             <div class="inline-check">
               <label><input type="radio" name="bank_known" value="yes"> Yes</label>
               <label><input type="radio" name="bank_known" value="no"> No</label>
@@ -2879,7 +2866,7 @@
           <div id="jointGuess" class="field-group" style="margin-top:12px;display:none"><label>Any guesses? Even a rough idea can help.</label>
             <input type="text" name="joint_guesses" placeholder="e.g. I think maybe the savings account..."></div>
           <div class="subsection-header">Insurance & Pensions</div>
-          <div class="field-group"><label>Do you know if they had a life insurance policy?</label>
+          <div class="field-group"><label data-rel-label="Do you know if {they} had a life insurance policy?">Do you know if they had a life insurance policy?</label>
             <div class="inline-check">
               <label><input type="radio" name="life_insurance" value="yes"> Yes</label>
               <label><input type="radio" name="life_insurance" value="no"> No</label>
@@ -2936,13 +2923,29 @@
           <span class="chevron">&#9662;</span>
         </div>
         <div class="section-body">
-          <div class="field-group"><label>Can you tell me about their living situation?</label>
+          <div class="field-group"><label data-rel-label="Can you tell me about {their} living situation?">Can you tell me about their living situation?</label>
             <div class="check-group">
               <label><input type="radio" name="living_situation" value="owned"> Owned property</label>
               <label><input type="radio" name="living_situation" value="rented"> Rented</label>
               <label><input type="radio" name="living_situation" value="shared"> Lived with you</label>
               <label><input type="radio" name="living_situation" value="care"> Care home / supported</label>
             </div>
+          </div>
+          <div class="field-group" style="margin-top:14px"><label data-rel-label="Do you know who {their} home insurance is with?">Do you know who their home insurance is with?</label>
+            <div class="inline-check">
+              <label><input type="radio" name="housing_insurance_known" value="yes"> Yes</label>
+              <label><input type="radio" name="housing_insurance_known" value="no"> No / not sure</label>
+              <label><input type="radio" name="housing_insurance_known" value="na"> Not applicable</label>
+            </div></div>
+          <div id="housingInsuranceYesDetail" class="field-group" style="margin-top:12px;display:none"><label>Who is it with?</label>
+            <input type="text" name="housing_insurance_provider" placeholder="e.g. Aviva, Direct Line, LV=..."></div>
+          <div id="housingInsuranceNotifiedQ" class="field-group" style="margin-top:12px;display:none"><label>Have you let them know about the death?</label>
+            <div class="inline-check">
+              <label><input type="radio" name="housing_insurance_notified" value="yes"> Yes</label>
+              <label><input type="radio" name="housing_insurance_notified" value="no"> Not yet</label>
+            </div></div>
+          <div id="housingInsuranceInfo" style="display:none;margin-top:12px;padding:16px 20px;background:var(--ghost-sheet);border:1.5px solid var(--gone-but-golden);border-radius:var(--radius);animation:fadeIn 0.3s ease;">
+            <p style="font-size:12px;color:var(--midnight-slate);line-height:1.7;margin:0;"><strong style="color:var(--ink);">Important:</strong> If the property is now unoccupied, you need to let the home insurer know as soon as possible. Many policies have a clause that voids cover if the home is empty for more than 30 consecutive days. Even if someone is still living there, the policyholder's death may affect the terms of the policy.</p>
           </div>
           <div class="field-group" style="margin-top:12px"><label>Is there anything else about the home situation you'd like to mention?</label>
             <textarea name="ic_housing_detail" rows="3" placeholder="e.g. The mortgage is in their name, I'm worried about the tenancy..."></textarea></div>
@@ -2957,14 +2960,14 @@
           <span class="chevron">&#9662;</span>
         </div>
         <div class="section-body">
-          <div class="field-group"><label>Are there any children who depended on them?</label>
+          <div class="field-group"><label data-rel-label="Are there any children who depended on {them}?">Are there any children who depended on them?</label>
             <div class="inline-check">
               <label><input type="radio" name="dep_children" value="yes"> Yes</label>
               <label><input type="radio" name="dep_children" value="no"> No</label>
             </div></div>
           <div id="depChildrenDetail" class="field-group" style="margin-top:12px;display:none"><label>How many, and roughly how old are they?</label>
             <input type="text" name="dep_children_detail" placeholder="e.g. 2 children, ages 4 and 7"></div>
-          <div class="field-group" style="margin-top:14px"><label>Was anyone else relying on them - perhaps an elderly parent or someone with a disability?</label>
+          <div class="field-group" style="margin-top:14px"><label data-rel-label="Was anyone else relying on {them} — perhaps an elderly parent or someone with a disability?">Was anyone else relying on them - perhaps an elderly parent or someone with a disability?</label>
             <div class="inline-check">
               <label><input type="radio" name="dep_other" value="yes"> Yes</label>
               <label><input type="radio" name="dep_other" value="no"> No</label>
@@ -3042,11 +3045,19 @@
           </div>
 
           <div class="field-group employer-only-field" style="margin-top:12px;display:none;">
-            <label>Do you know if you might be entitled to any bereavement benefits beyond this call?</label>
+            <label>Are you aware of any bereavement benefits with Octopus Legacy beyond this call?</label>
             <div class="check-group" style="margin-top:8px;">
               <label><input type="radio" name="employer_benefits_aware" value="yes"> Yes, I'm aware of them</label>
               <label><input type="radio" name="employer_benefits_aware" value="no"> No, I haven't thought about it</label>
               <label><input type="radio" name="employer_benefits_aware" value="didnt_know"> I didn't know there were any</label>
+            </div>
+          </div>
+          <div class="field-group" style="margin-top:12px;">
+            <label>Are you aware of any government bereavement benefits you may be entitled to?</label>
+            <div class="check-group" style="margin-top:8px;">
+              <label><input type="radio" name="employer_gov_benefits" value="yes"> Yes, I've looked into it</label>
+              <label><input type="radio" name="employer_gov_benefits" value="no"> No, I haven't thought about it</label>
+              <label><input type="radio" name="employer_gov_benefits" value="didnt_know"> I didn't know there were any</label>
             </div>
           </div>
 
@@ -3096,7 +3107,7 @@
           <span class="chevron">&#9662;</span>
         </div>
         <div class="section-body">
-          <div class="field-group"><label>Have you had any emotional support so far?</label>
+          <div class="field-group" style="margin-bottom:16px;"><label>Have you had any emotional support so far?</label>
             <div class="inline-check">
               <label><input type="radio" name="emo_support" value="yes"> Yes</label>
               <label><input type="radio" name="emo_support" value="no"> No</label>
@@ -3108,6 +3119,18 @@
               <label><input type="radio" name="emo_links_wanted" value="yes"> Yes please</label>
               <label><input type="radio" name="emo_links_wanted" value="no"> No thanks</label>
             </div></div>
+          <div class="field-group" style="margin-top:16px;">
+            <label>Would you like us to look into bereavement counselling for you?</label>
+            <div class="inline-check">
+              <label><input type="radio" name="counselling_referral" value="yes"> Yes</label>
+              <label><input type="radio" name="counselling_referral" value="no"> No</label>
+              <label><input type="radio" name="counselling_referral" value="already"> Already receiving</label>
+            </div>
+          </div>
+          <div class="field-group" style="margin-top:16px;">
+            <label>How would you say you're feeling at the moment?</label>
+            <textarea name="caller_feeling" rows="3" placeholder="Ask if the caller seems comfortable to discuss — e.g. I'm just feeling really lost, I don't know where to start..."></textarea>
+          </div>
         </div>
       </div>
 
@@ -3204,7 +3227,7 @@
             </div></div>
 
           <div class="subsection-header">The Will</div>
-          <div class="field-group"><label>Do you know if they left a will?</label>
+          <div class="field-group"><label data-rel-label="Do you know if {they} left a will?">Do you know if they left a will?</label>
             <div class="inline-check">
               <label><input type="radio" name="unsure_will" value="yes"> Yes</label>
               <label><input type="radio" name="unsure_will" value="no"> No</label>
@@ -3258,14 +3281,14 @@
               <label><input type="radio" name="unsure_funeral_plan" value="no"> No</label>
               <label><input type="radio" name="unsure_funeral_plan" value="unsure"> I'm not sure</label>
             </div></div>
-          <div id="unsureFuneralPlanYesDetail" class="field-group" style="margin-top:12px;display:none"><label>Any details about the plan - like who it's with or anything they've told you?</label>
+          <div id="unsureFuneralPlanYesDetail" class="field-group" style="margin-top:12px;display:none"><label data-rel-label="Any details about the plan — like who it's with or anything {they} told you?">Any details about the plan - like who it's with or anything they've told you?</label>
             <textarea name="unsure_funeral_plan_notes" rows="2" placeholder="e.g. It's with Co-op, they arranged it a few years ago..."></textarea></div>
 
           <div id="unsureFuneralFollowUp" style="display:none;">
-            <div class="field-group" style="margin-top:12px"><label>Do you know if they had any funeral wishes - anything they'd mentioned about how they'd like things done?</label>
+            <div class="field-group" style="margin-top:12px"><label data-rel-label="Do you know if {they} had any funeral wishes — anything {they} had mentioned about how {they}'d like things done?">Do you know if they had any funeral wishes - anything they'd mentioned about how they'd like things done?</label>
               <textarea name="unsure_funeral_wishes" rows="3" placeholder="E.g. burial vs cremation, a particular place, readings, dress code, anything they'd talked about..."></textarea></div>
 
-            <div class="field-group" style="margin-top:12px"><label>Did they have a favourite song, band, or piece of music that meant something to them?</label>
+            <div class="field-group" style="margin-top:12px"><label data-rel-label="Did {they} have a favourite song, band, or piece of music that meant something to {them}?">Did they have a favourite song, band, or piece of music that meant something to them?</label>
               <textarea name="unsure_funeral_music" rows="2" placeholder="This can be a lovely personal touch - even if you're not sure yet, it's worth noting down..."></textarea></div>
 
             <div class="field-group" style="margin-top:12px"><label>Is there anything else you'd like included - a favourite poem, a reading, flowers, a charity for donations?</label>
@@ -3389,14 +3412,14 @@
             </div></div>
 
           <div class="subsection-header">Dependants & Support</div>
-          <div class="field-group"><label>Is anyone else affected who relied on them - children, elderly relatives?</label>
+          <div class="field-group"><label data-rel-label="Is anyone else affected who relied on {them} — children, elderly relatives?">Is anyone else affected who relied on them - children, elderly relatives?</label>
             <div class="inline-check">
               <label><input type="radio" name="unsure_dependants" value="yes"> Yes</label>
               <label><input type="radio" name="unsure_dependants" value="no"> No</label>
             </div></div>
           <div class="info-dropdown" id="dependantsDropdown" style="display:none;">
             <div class="info-dropdown-label">Tell us a bit more</div>
-            <div class="field-group" style="margin-bottom:10px"><label style="font-size:13px;">Who relied on them?</label>
+            <div class="field-group" style="margin-bottom:10px"><label style="font-size:13px;" data-rel-label="Who relied on {them}?">Who relied on them?</label>
               <div class="check-group" style="margin-top:6px;">
                 <label><input type="checkbox" name="unsure_dep_children"> Children</label>
                 <label><input type="checkbox" name="unsure_dep_elderly"> Elderly parent(s)</label>
@@ -3424,11 +3447,17 @@
             </div></div>
 
           <div class="subsection-header">Benefits</div>
-          <div class="field-group"><label>Do you know if you might be entitled to any bereavement benefits?</label>
+          <div class="field-group"><label>Are you aware of any bereavement benefits with Octopus Legacy beyond this call?</label>
             <div class="inline-check">
-              <label><input type="radio" name="unsure_benefits" value="yes"> Yes, I've looked into it</label>
-              <label><input type="radio" name="unsure_benefits" value="no"> No, I haven't thought about it</label>
-              <label><input type="radio" name="unsure_benefits" value="unsure"> I didn't know there were any</label>
+              <label><input type="radio" name="unsure_ol_benefits" value="yes"> Yes, I've looked into it</label>
+              <label><input type="radio" name="unsure_ol_benefits" value="no"> No, I haven't thought about it</label>
+              <label><input type="radio" name="unsure_ol_benefits" value="unsure"> I didn't know there were any</label>
+            </div></div>
+          <div class="field-group" style="margin-top:12px"><label>Are you aware of any government bereavement benefits you may be entitled to?</label>
+            <div class="inline-check">
+              <label><input type="radio" name="unsure_gov_benefits" value="yes"> Yes, I've looked into it</label>
+              <label><input type="radio" name="unsure_gov_benefits" value="no"> No, I haven't thought about it</label>
+              <label><input type="radio" name="unsure_gov_benefits" value="unsure"> I didn't know there were any</label>
             </div></div>
 
         </div>
@@ -3784,7 +3813,44 @@
       t.classList.toggle('active', parseInt(t.dataset.page) === n);
     });
 
+    // Tailor page 2 question labels based on relationship
+    if (n === 2) tailorQuestionsToRelationship();
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ── Relationship-aware question labels ─────────────────────────────
+  function getRelationshipTerms() {
+    var rel = (form.querySelector('input[name="relationship"]:checked') || {}).value || '';
+    var first = (form.dec_first_name || {}).value || '';
+    // Map relationship to natural language terms
+    var termMap = {
+      mother:   { pronoun: 'she', possessive: 'her', familiar: first || 'your mum',   they: first || 'your mum' },
+      father:   { pronoun: 'he',  possessive: 'his', familiar: first || 'your dad',   they: first || 'your dad' },
+      spouse:   { pronoun: 'they', possessive: 'their', familiar: first || 'your husband/wife', they: first || 'your husband/wife' },
+      partner:  { pronoun: 'they', possessive: 'their', familiar: first || 'your partner', they: first || 'your partner' },
+      son:      { pronoun: 'he',  possessive: 'his', familiar: first || 'your son',    they: first || 'your son' },
+      daughter: { pronoun: 'she', possessive: 'her', familiar: first || 'your daughter', they: first || 'your daughter' },
+      sibling:  { pronoun: 'they', possessive: 'their', familiar: first || 'your brother/sister', they: first || 'your brother/sister' },
+      friend:   { pronoun: 'they', possessive: 'their', familiar: first || 'your friend', they: first || 'your friend' },
+      executor: { pronoun: 'they', possessive: 'their', familiar: first || 'the deceased', they: first || 'the deceased' },
+      other:    { pronoun: 'they', possessive: 'their', familiar: first || 'your loved one', they: first || 'your loved one' }
+    };
+    return termMap[rel] || termMap['other'];
+  }
+
+  function tailorQuestionsToRelationship() {
+    var t = getRelationshipTerms();
+    // Map data-rel-label attributes to tailored text
+    document.querySelectorAll('[data-rel-label]').forEach(function(el) {
+      var template = el.getAttribute('data-rel-label');
+      el.textContent = template
+        .replace(/\{they\}/g, t.they)
+        .replace(/\{their\}/g, t.possessive)
+        .replace(/\{them\}/g, t.pronoun === 'they' ? 'them' : (t.pronoun === 'she' ? 'her' : 'him'))
+        .replace(/\{pronoun\}/g, t.pronoun)
+        .replace(/\{familiar\}/g, t.familiar);
+    });
   }
 
   // ── Fact-find follow-up toggles ────────────────
@@ -4555,6 +4621,12 @@ ${context}`;
       },
       deceased: {
         title: gv('dec_title'), first_name: gv('dec_first'), surname: gv('dec_surname'),
+        familiar_name: (function() {
+          var rel = gr('relationship');
+          var first = gv('dec_first');
+          var familiarMap = { mother: 'your mum', father: 'your dad', spouse: 'your husband/wife', partner: 'your partner', son: 'your son', daughter: 'your daughter', sibling: 'your brother/sister', friend: 'your friend', executor: 'the deceased', other: 'your loved one' };
+          return familiarMap[rel] || 'your loved one';
+        })(),
         dod: gv('dec_dod'),
         marital_status: gr('marital_status'), death_registered: gr('death_registered'), death_certificate: gr('death_cert'),
         sensitive_case: gc('sensitive_case'),
@@ -4604,6 +4676,7 @@ ${context}`;
         registering: { registered: gr('reg_registered'), coroner: gr('reg_coroner'), detail: gv('ic_registering_detail') },
         funeral: {
           started: gr('funeral_started'),
+          taken_place: gr('funeral_taken_place'),
           detail: gv('ic_funeral_detail'),
           pre_paid_plan: gr('funeral_plan'), plan_notes: gv('funeral_plan_notes'),
           wishes: gv('funeral_wishes'),
@@ -4616,6 +4689,7 @@ ${context}`;
         },
         notify: {
           living_situation: gr('living_situation'),
+            housing_insurance_known: gr('housing_insurance_known'), housing_insurance_provider: gv('housing_insurance_provider'), housing_insurance_notified: gr('housing_insurance_notified'),
           orgs_to_notify: { dwp: gc('org_dwp'), hmrc: gc('org_hmrc'), council: gc('org_council'),
             bank: gc('org_bank'), pension: gc('org_pension'), insurance: gc('org_insurance'),
             employer: gc('org_employer'), gp: gc('org_gp'), dvla: gc('org_dvla'),
@@ -4666,7 +4740,7 @@ ${context}`;
           dep_types: { children: gc('unsure_dep_children'), elderly: gc('unsure_dep_elderly'), disabled: gc('unsure_dep_disabled'), partner: gc('unsure_dep_partner'), other: gc('unsure_dep_other') },
           dep_detail: gv('unsure_dep_detail'),
           support: gr('unsure_support'), employment: gr('unsure_employment'),
-          benefits: gr('unsure_benefits')
+          ol_benefits: gr('unsure_ol_benefits'), gov_benefits: gr('unsure_gov_benefits')
         }
       },
       adviser_notes: notesEl ? notesEl.value : '',
@@ -5268,6 +5342,14 @@ ${context}`;
   function clearForm() {
     if (!confirm('Clear all fields? This cannot be undone.')) return;
     form.reset();
+    // Hide all conditional follow-up panels
+    document.querySelectorAll('.info-dropdown, [id$="Detail"], [id$="FollowUp"], [id$="InfoPopup"], [id$="YesDetail"], [id$="NoDetail"]').forEach(function(el) { el.style.display = 'none'; });
+    document.querySelectorAll('.topic-followup.open').forEach(function(el) { el.classList.remove('open'); });
+    document.querySelectorAll('.employer-only-field').forEach(function(el) { el.style.display = 'none'; });
+    var funeralNotYet = document.getElementById('funeralNotYetQuestions');
+    if (funeralNotYet) funeralNotYet.style.display = '';
+    var housingInsInfo = document.getElementById('housingInsuranceInfo');
+    if (housingInsInfo) housingInsInfo.style.display = 'none';
     form.call_date.value = today;
     form.call_time.value = now;
     form.signature_date.value = today;
@@ -6407,7 +6489,7 @@ Write a personalised version of each text block for ${callerName}.`;
   async function generateHybridPlan(data) {
     _sectionLeadUsed = false;
     var callerName = data.caller.first_name || 'there';
-    var decFirst = data.deceased.first_name || 'your loved one';
+    var decFirst = data.deceased.familiar_name || 'your loved one';
     var relLabel = formatRelationshipForPlan(data.caller.relationship, data.deceased.first_name, data.caller.child_type);
     var adviserFullName = data.call_details.adviser_name || 'Your specialist';
     var adviserName = (adviserFullName.split(' ')[0]) || 'Your specialist';
@@ -6512,7 +6594,8 @@ Write a personalised version of each text block for ${callerName}.`;
         || (!data.immediate_concerns.will && !isUnsure && data.topics.will.has_will !== 'yes'))) {
       sectionKeys.push('will');
     }
-    if (!ac.funeral && (data.immediate_concerns.funeral
+    var funeralTakenPlace = (data.topics.funeral || {}).taken_place === 'yes';
+    if (!ac.funeral && !funeralTakenPlace && (data.immediate_concerns.funeral
         || (isUnsure && (u.funeral !== 'yes' || u.funeral_plan === 'unsure')))) {
       sectionKeys.push('funeral');
     }
@@ -6595,7 +6678,7 @@ Write a personalised version of each text block for ${callerName}.`;
 
     // Build the full plan: cover page + note from us + AI sections + checklist
     var callerName = data.caller.first_name || 'there';
-    var decFirst = data.deceased.first_name || 'your loved one';
+    var decFirst = data.deceased.familiar_name || 'your loved one';
     var relLabel = formatRelationshipForPlan(data.caller.relationship, data.deceased.first_name, data.caller.child_type);
     var adviserName = (data.call_details.adviser_name || 'Your specialist').split(' ')[0];
     var adviserFullName = data.call_details.adviser_name || 'Your specialist';
@@ -6639,7 +6722,7 @@ Write a personalised version of each text block for ${callerName}.`;
     _sectionLeadUsed = false;
     const callerName = data.caller.first_name || 'there';
     const decName = [data.deceased.title, data.deceased.first_name, data.deceased.surname].filter(Boolean).join(' ') || 'your loved one';
-    const decFirst = data.deceased.first_name || 'your loved one';
+    const decFirst = data.deceased.familiar_name || 'your loved one';
     const relLabel = formatRelationshipForPlan(data.caller.relationship, data.deceased.first_name, data.caller.child_type);
     const daysSinceDeath = calcDaysSince(data.deceased.dod);
     const adviserFullName = data.call_details.adviser_name || 'Your specialist';
@@ -6781,7 +6864,8 @@ Write a personalised version of each text block for ${callerName}.`;
         || (!data.immediate_concerns.will && !isUnsure && data.topics.will.has_will !== 'yes'))) {
       flowingSections.push(buildWillSection(data, u, tone));
     }
-    if (!ac.funeral && (data.immediate_concerns.funeral
+    var funeralTakenPlace = (data.topics.funeral || {}).taken_place === 'yes';
+    if (!ac.funeral && !funeralTakenPlace && (data.immediate_concerns.funeral
         || (isUnsure && (u.funeral !== 'yes' || u.funeral_plan === 'unsure')))) {
       flowingSections.push(buildFuneralSection(data, tone));
     }
@@ -7031,7 +7115,7 @@ Write a personalised version of each text block for ${callerName}.`;
       { label: 'Review your benefits entitlement', desc: 'Your situation may have changed', done: ben.receiving === 'yes' || ac.benefits, doneText: 'Receiving' },
       // ── When ready ──
       { label: 'Apply for probate (if needed)', desc: 'Banks will tell you whether a grant is required', done: ac.legal || leg.probate_mentioned === 'yes', doneText: 'Started' },
-      { label: 'Look after yourself', desc: 'Reach out for emotional support when you need it', done: emo.support === 'yes' || ac.emotional, doneText: 'Support in place' }
+      { label: 'Look after yourself', desc: 'Reach out for emotional support when you need it', done: false, doneText: '' }
     ];
 
     const doneCount = items.filter(i => i.done).length;
@@ -7042,9 +7126,16 @@ Write a personalised version of each text block for ${callerName}.`;
       return `<li${liClass}><span class="${tickClass}"></span><div><strong>${item.label}</strong>${note}<br><span style="font-size:12px;color:var(--midnight-slate);">${item.desc}</span></div></li>`;
     }).join('');
 
-    let intro = doneCount > 0
-      ? `<p style="font-size:13px;color:var(--freshly-dug);margin-bottom:14px;font-weight:600;">${doneCount} item${doneCount > 1 ? 's' : ''} already ticked off. Well done.</p>`
-      : '';
+    let intro = '';
+    if (doneCount > 0) {
+      var doneLabels = items.filter(function(i) { return i.done; }).map(function(i) { return i.label; });
+      var timeSensitive = doneLabels.some(function(l) { return /register|death certificate|funeral|will|tell us once/i.test(l); });
+      if (timeSensitive) {
+        intro = '<p style="font-size:13px;color:var(--freshly-dug);margin-bottom:14px;font-weight:600;">' + doneCount + ' item' + (doneCount > 1 ? 's' : '') + ' already completed. You’ve taken care of some of the most time-sensitive steps — there’s no rush on the rest, take things at your own pace.</p>';
+      } else {
+        intro = '<p style="font-size:13px;color:var(--freshly-dug);margin-bottom:14px;font-weight:600;">' + doneCount + ' item' + (doneCount > 1 ? 's' : '') + ' already completed.</p>';
+      }
+    }
 
     return wrapSection('clipboard', 'Your Action Checklist', 'Key steps following a bereavement', intro + `<ul class="plan-checklist">${html}</ul>`);
   }
@@ -7053,7 +7144,7 @@ Write a personalised version of each text block for ${callerName}.`;
     const registered = data.deceased.death_registered;
     const reg = data.topics.registering || {};
     const regDone = registered === 'yes' || reg.registered === 'yes';
-    const decFirst = data.deceased.first_name || 'your loved one';
+    const decFirst = data.deceased.familiar_name || 'your loved one';
     let content = '';
 
     if (regDone) {
@@ -7080,7 +7171,7 @@ Write a personalised version of each text block for ${callerName}.`;
 
   function buildFuneralSection(data, tone) {
     const fun = data.topics.funeral || {};
-    const decFirst = (data.deceased || {}).first_name || 'your loved one';
+    const decFirst = (data.deceased || {}).familiar_name || 'your loved one';
     const funeralStarted = fun.started === 'yes';
     let content = '';
 
@@ -7165,13 +7256,15 @@ Write a personalised version of each text block for ${callerName}.`;
   function buildFinancialSection(data, tone) {
     const fin = data.topics.finances || {};
     const dec = data.deceased || {};
-    const decFirst = dec.first_name || 'your loved one';
+    const decFirst = dec.familiar_name || 'your loved one';
     let content = '';
 
     // Build bank notification — merge specific bank names into the notification text
     var bankNotifyParts = [];
     if (fin.bank_known === 'yes' && fin.bank_names) {
-      bankNotifyParts.push('You mentioned that ' + escHTML(decFirst) + ' had accounts with ' + escHTML(fin.bank_names) + '. Contact each of their bereavement teams to let them know about ' + escHTML(decFirst) + '\u2019s death. They will freeze sole accounts and stop any standing orders or direct debits running from them. Before you make those calls, it\u2019s worth jotting down any regular payments you know about \u2013 once the banks are notified, statements will stop coming. Most banks have dedicated bereavement phone lines and online forms that make this process a bit easier. Full contact details for each organisation are listed in the Key Contacts section at the end of this plan.');
+      var multipleBanks = /,| and /i.test(fin.bank_names);
+      var teamPhrase = multipleBanks ? 'Contact each of their bereavement teams' : 'Contact their bereavement team';
+      bankNotifyParts.push('You mentioned that ' + escHTML(decFirst) + ' had accounts with ' + escHTML(fin.bank_names) + '. ' + teamPhrase + ' to let them know about ' + escHTML(decFirst) + '\u2019s death. They will freeze sole accounts and stop any standing orders or direct debits running from them. Before you make those calls, it\u2019s worth jotting down any regular payments you know about \u2013 once the banks are notified, statements will stop coming. Most banks have dedicated bereavement phone lines and online forms that make this process a bit easier. Full contact details for each organisation are listed in the Key Contacts section at the end of this plan.');
     } else if (fin.bank_known === 'yes') {
       bankNotifyParts.push('You have identified some bank accounts. Contact each bank\u2019s bereavement team to let them know about ' + escHTML(decFirst) + '\u2019s death. They will freeze sole accounts and stop any standing orders or direct debits. Before you call, note down any regular payments you know about \u2013 once notified, statements will stop. Most banks have dedicated bereavement phone lines and online forms. Full contact details are listed in the Key Contacts section at the end of this plan.');
     } else if (fin.bank_known === 'no' && fin.bank_guesses) {
@@ -7180,7 +7273,7 @@ Write a personalised version of each text block for ${callerName}.`;
       bankNotifyParts.push(getKBPlanText('bank', 'notify').replace(/the death/g, escHTML(decFirst) + '\u2019s death').replace('the deceased', escHTML(decFirst)));
     }
     if (fin.life_insurance === 'yes') {
-      bankNotifyParts.push('There may also be life insurance policies to claim on. Contact the provider with a certified copy of the death certificate to begin the process. If you are unsure who the provider is, check ' + escHTML(decFirst) + '\u2019s paperwork, bank statements, or any correspondence from insurance companies.');
+      bankNotifyParts.push('You mentioned there is a life insurance policy in place. Contact the provider with a certified copy of the death certificate to begin the claims process. If you are unsure who the provider is, check ' + escHTML(decFirst) + '\u2019s paperwork, bank statements, or any correspondence from insurance companies.');
     }
     if (fin.pension_dis === 'yes') {
       bankNotifyParts.push('There may be pension or death-in-service benefits to look into. Contact ' + escHTML(decFirst) + '\u2019s employer or pension provider to find out what may be available.');
@@ -7206,7 +7299,15 @@ Write a personalised version of each text block for ${callerName}.`;
 
     content += `<div class="plan-item">${planBullet('banknotes')}<div class="plan-item-content"><h4>Finding unknown assets</h4><p>${getKBPlanText('bank', 'finding_assets').replace('they held', escHTML(decFirst) + ' held')}</p><a href="https://www.mylostaccount.org.uk/" target="_blank" class="plan-link">My Lost Account</a></div></div>`;
 
-    content += `<div class="plan-item">${planBullet('banknotes')}<div class="plan-item-content"><h4>Inheritance Tax</h4><p>${getKBPlanText('iht', 'summary')}</p><a href="https://www.gov.uk/inheritance-tax" target="_blank" class="plan-link">Inheritance Tax on GOV.UK</a></div></div>`;
+    var ihtDodStr = (data.deceased || {}).dec_dod || '';
+    var ihtTimingNote = '';
+    if (ihtDodStr) {
+      var ihtDod = new Date(ihtDodStr + 'T00:00:00');
+      var sixMonths = new Date(ihtDod); sixMonths.setMonth(sixMonths.getMonth() + 6);
+      var oneYear = new Date(ihtDod); oneYear.setFullYear(oneYear.getFullYear() + 1);
+      ihtTimingNote = '<p style="margin-top:8px;">If inheritance tax is payable, it needs to be paid by <strong>' + sixMonths.toLocaleDateString('en-GB', {day:'numeric',month:'long',year:'numeric'}) + '</strong> (six months after the date of death). The full IHT return must be filed within one year, by <strong>' + oneYear.toLocaleDateString('en-GB', {day:'numeric',month:'long',year:'numeric'}) + '</strong>. Interest is charged on late payments.</p>';
+    }
+    content += `<div class="plan-item">${planBullet('banknotes')}<div class="plan-item-content"><h4>Inheritance Tax</h4><p>${getKBPlanText('iht', 'summary')}</p>${ihtTimingNote}<p style="margin-top:8px;">This is typically handled as part of the probate process. If you need help understanding whether IHT applies to the estate, our probate team can guide you through it.</p><a href="https://www.gov.uk/inheritance-tax" target="_blank" class="plan-link">Inheritance Tax on GOV.UK</a></div></div>`;
 
     content += `<div class="plan-callout" style="border-left-color:var(--freshly-dug);background:var(--ghost-sheet);"><strong>Octopus Legal Services - Probate and Estate Administration</strong><p style="margin-top:6px;">Dealing with the financial side of an estate can be complicated. <strong>Octopus Legal Services</strong> can help you obtain the Grant of Probate, gather assets, settle any outstanding debts, and distribute the estate. Contact us to find out what support is available.</p><a href="https://octopuslegacy.com" target="_blank" class="plan-link">Octopus Legal Services</a></div>`;
 
@@ -7218,19 +7319,27 @@ Write a personalised version of each text block for ${callerName}.`;
     const tuoDone = not.tell_us_once === 'yes';
     let content = '';
 
-    if (tuoDone) {
-      content += `<div class="plan-callout" style="border-left-color:var(--freshly-dug);"><strong>Tell Us Once completed \u2713</strong><p style="margin-top:6px;">${getKBPlanText('tell_us_once', 'completed')}</p></div>`;
-    } else {
-      content += `<div class="plan-item">${planBullet('envelope')}<div class="plan-item-content"><h4>Tell Us Once</h4><p>${getKBPlanText('tell_us_once', 'service')}</p><a href="https://www.gov.uk/after-a-death/organisations-you-need-to-contact-and-things-you-need-to-do" target="_blank" class="plan-link">Tell Us Once on GOV.UK</a></div></div>`;
+    var dodStr = (data.deceased || {}).dec_dod || '';
+    var tuoDeadlineNote = '';
+    if (dodStr) {
+      var dodDate = new Date(dodStr + 'T00:00:00');
+      var deadline = new Date(dodDate);
+      deadline.setDate(deadline.getDate() + 28);
+      tuoDeadlineNote = ' <strong style="color:var(--freshly-dug);">Time-sensitive:</strong> Based on the date of death, you have until <strong>' + deadline.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) + '</strong> to use this service.';
+    }
+    // Only show Tell Us Once guidance if they haven't already completed it
+    if (!tuoDone) {
+      content += `<div class="plan-item">${planBullet('envelope')}<div class="plan-item-content"><h4>Tell Us Once</h4><p>${getKBPlanText('tell_us_once', 'service')}${tuoDeadlineNote}</p><a href="https://www.gov.uk/after-a-death/organisations-you-need-to-contact-and-things-you-need-to-do" target="_blank" class="plan-link">Tell Us Once on GOV.UK</a></div></div>`;
     }
 
     // Build org list - clean style, no bullet icons, proper capitalisation with full names
     const orgs = not.orgs_to_notify || {};
-    const decFirst = (data.deceased || {}).first_name || 'your loved one';
+    const decFirst = (data.deceased || {}).familiar_name || 'your loved one';
     const orgDetails = {
       dwp: { label: 'DWP (Department for Work and Pensions)', detail: 'If ' + escHTML(decFirst) + ' was receiving any benefits, the DWP needs to be notified. Tell Us Once can handle this, but if you have not used that service, contact them directly.' },
       hmrc: { label: 'HMRC (His Majesty\u2019s Revenue and Customs)', detail: 'HMRC will need to know so they can close any open tax affairs and issue a final tax calculation for ' + escHTML(decFirst) + '\u2019s estate.' },
       council: { label: 'Local Council', detail: 'Notify the council for council tax purposes. You may be entitled to a single person discount (25% off) or an exemption if the property is now empty.' },
+      home_insurance: { label: 'Home Insurance Provider (Urgent)', detail: 'If the property is now unoccupied or the policyholder has died, you must notify the home insurer as soon as possible. Many policies have a clause that voids cover if the property is empty for more than 30 days. Check the policy terms and let them know the circumstances — they may be able to adjust the cover.' },
       bank: { label: 'Banks and Building Societies', detail: 'Contact each bank\u2019s bereavement team. They will freeze ' + escHTML(decFirst) + '\u2019s accounts and tell you what documentation they need to release funds.' },
       pension: { label: 'Pension Providers', detail: 'Contact any pension providers to find out about death benefits, lump sum payments, or survivor pensions that may be available.' },
       insurance: { label: 'Insurance Providers', detail: 'Home, car, life, and any other policies. Some may pay out, others will need to be cancelled or transferred to your name.' },
@@ -7242,7 +7351,7 @@ Write a personalised version of each text block for ${callerName}.`;
       tv: { label: 'TV Licence', detail: 'If the TV licence was in ' + escHTML(decFirst) + '\u2019s name, contact TV Licensing to transfer or cancel it. You may be entitled to a refund for any unused months.' }
     };
     // Use a fixed display order so org items always appear consistently
-    var orgDisplayOrder = ['dwp', 'hmrc', 'council', 'bank', 'pension', 'insurance', 'gp', 'passport', 'employer', 'dvla', 'utilities', 'tv'];
+    var orgDisplayOrder = ['dwp', 'hmrc', 'council', 'home_insurance', 'bank', 'pension', 'insurance', 'gp', 'passport', 'employer', 'dvla', 'utilities', 'tv'];
     const toNotify = orgDisplayOrder.filter(function(k) { return orgs[k]; });
     if (toNotify.length > 0) {
       // Build org list items
@@ -7267,7 +7376,7 @@ Write a personalised version of each text block for ${callerName}.`;
       content += `<div class="plan-callout" style="margin-top:14px;"><strong>Save yourself time</strong><p style="margin-top:6px;">${getKBPlanText('notify_orgs', 'life_ledger')}</p><a href="https://www.lifeledger.com/" target="_blank" class="plan-link">Life Ledger - notification service</a></div>`;
     }
 
-    content += `<div class="plan-callout" style="border-left-color:var(--freshly-dug);background:var(--ghost-sheet);"><strong>Octopus Legacy Notification Concierge</strong><p style="margin-top:6px;">${getKBPlanText('notify_orgs', 'ol_concierge')}</p><a href="https://octopuslegacy.com" target="_blank" class="plan-link">Octopus Legacy</a></div>`;
+    content += `<div class="plan-callout" style="border-left-color:var(--freshly-dug);background:var(--ghost-sheet);"><strong>Octopus Legacy Concierge Service</strong><p style="margin-top:6px;">${getKBPlanText('notify_orgs', 'ol_concierge')}</p><a href="https://octopuslegacy.com" target="_blank" class="plan-link">Octopus Legacy</a></div>`;
 
     return wrapSection('envelope', 'Organisations to Notify', tuoDone ? 'Tracking your notifications' : 'Who needs to know', content, tone, 'Ongoing');
   }
@@ -7297,6 +7406,18 @@ Write a personalised version of each text block for ${callerName}.`;
       content += `<div class="plan-item">${planBullet('home')}<div class="plan-item-content"><h4>Securing the property</h4><p>${getKBPlanText('property', 'securing')}</p></div></div>`;
     }
 
+    // Home insurance - based on the housing insurance question
+    const insuranceKnown = (data.topics.notify || {}).housing_insurance_known || '';
+    const insuranceProvider = (data.topics.notify || {}).housing_insurance_provider || '';
+    const insuranceNotified = (data.topics.notify || {}).housing_insurance_notified || '';
+    if (insuranceKnown === 'yes' && insuranceNotified === 'yes') {
+      // Already notified — no further action needed, skip the section
+    } else if (insuranceKnown === 'yes' && hasMeaningful(insuranceProvider)) {
+      content += `<div class="plan-item">${planBullet('home')}<div class="plan-item-content"><h4>Home insurance</h4><p>You mentioned the home insurance is with ${escHTML(insuranceProvider)}. You need to contact them as soon as possible to let them know about the death. If the property is now unoccupied, many policies have a clause that voids cover after 30 consecutive days of the home being empty. Let them know the circumstances and they may be able to adjust the cover.</p></div></div>`;
+    } else if (insuranceKnown === 'no') {
+      content += `<div class="plan-item">${planBullet('home')}<div class="plan-item-content"><h4>Home insurance</h4><p>If the property is now unoccupied or the policyholder has died, you need to notify the home insurer as soon as possible. Many policies have a clause that voids cover if the property is empty for more than 30 consecutive days. Check any paperwork or bank statements to find out who the policy is with, and let them know the circumstances.</p></div></div>`;
+    }
+
     // Weave in specific housing concerns mentioned during the call
     const housingDetail = (data.topics.housing || {}).detail || '';
     if (hasMeaningful(housingDetail) || hasMeaningful(housingConcerns)) {
@@ -7319,7 +7440,7 @@ Write a personalised version of each text block for ${callerName}.`;
 
   function buildDependantsSection(data, tone) {
     const ch = data.topics.children || {};
-    const decFirst = (data.deceased || {}).first_name || 'your loved one';
+    const decFirst = (data.deceased || {}).familiar_name || 'your loved one';
     let content = '';
 
     if (ch.has_children === 'yes') {
@@ -7341,7 +7462,18 @@ Write a personalised version of each text block for ${callerName}.`;
       }
     }
 
-    content += `<div class="plan-item">${planBullet('users')}<div class="plan-item-content"><h4>Guardian\u2019s Allowance</h4><p>${getKBPlanText('children', 'guardians_allowance')}</p><a href="https://www.gov.uk/guardians-allowance" target="_blank" class="plan-link">Guardian\u2019s Allowance on GOV.UK</a></div></div>`;
+    // Guardian's Allowance - only show if the caller is caring for a child whose parent has died
+    // (i.e. the relationship is not parent/spouse \u2014 typically grandparent, sibling, friend, other taking on care)
+    var callerRel = (data.caller || {}).relationship || '';
+    var isParentDied = (callerRel === 'spouse' || callerRel === 'partner');
+    if (isParentDied && ch.has_children === 'yes') {
+      // Spouse/partner lost \u2014 children lost a parent, but caller is the surviving parent, not a guardian
+      // Don't show Guardian's Allowance \u2014 instead mention other benefits
+      content += `<div class="plan-item">${planBullet('banknotes')}<div class="plan-item-content"><h4>Financial support for families</h4><p>There are government benefits available to help families who have lost a parent, including Bereavement Support Payment and Child Benefit. It is worth checking what you may be entitled to.</p><a href="https://www.gov.uk/browse/benefits/bereavement" target="_blank" class="plan-link">Bereavement benefits on GOV.UK</a></div></div>`;
+    } else if (ch.has_children === 'yes') {
+      // Non-parent caring for children \u2014 Guardian's Allowance may apply
+      content += `<div class="plan-item">${planBullet('users')}<div class="plan-item-content"><h4>Guardian\u2019s Allowance</h4><p>${getKBPlanText('children', 'guardians_allowance')}</p><a href="https://www.gov.uk/guardians-allowance" target="_blank" class="plan-link">Guardian\u2019s Allowance on GOV.UK</a></div></div>`;
+    }
 
     return wrapSection('users', 'Children & Dependants', 'Support for those who depended on them', content, tone, 'As soon as possible');
   }
@@ -7404,7 +7536,7 @@ Write a personalised version of each text block for ${callerName}.`;
     const willFound = wil.has_will === 'yes';
     let content = '';
 
-    const decFirst = (data.deceased || {}).first_name || 'your loved one';
+    const decFirst = (data.deceased || {}).familiar_name || 'your loved one';
     if (willFound) {
       content += `<div class="plan-callout" style="border-left-color:var(--freshly-dug);"><strong>${escHTML(decFirst)}\u2019s will has been located \u2713</strong><p style="margin-top:6px;">${getKBPlanText('will', 'will_found')}</p></div>`;
       content += `<div class="plan-item">${planBullet('pencil')}<div class="plan-item-content"><h4>Reading and understanding the will</h4><p>${getKBPlanText('will', 'reading')}</p></div></div>`;
@@ -7449,16 +7581,9 @@ Write a personalised version of each text block for ${callerName}.`;
     const probateSupport = (data.topics.legal || {}).probate_support || u.probate_support || '';
     let content = '';
 
-    // Octopus Legal Services - show interest callout if they expressed interest, otherwise general intro
-    if (probateSupport === 'yes' || probateSupport === 'maybe') {
-      content += `<div class="plan-callout" style="border-left-color:var(--success);background:var(--ghost-sheet);"><strong>${probateSupport === 'yes' ? 'You have expressed interest in probate support' : 'You mentioned you may want probate support'}</strong><p style="margin-top:6px;">${getKBPlanText('probate', 'ols_interest')}</p><a href="https://octopuslegacy.com" target="_blank" class="plan-link">Contact Octopus Legal Services</a></div>`;
-    } else {
-      content += `<div class="plan-callout" style="border-left-color:var(--freshly-dug);background:var(--ghost-sheet);"><strong>Octopus Legal Services</strong><p style="margin-top:6px;">${getKBPlanText('probate', 'ols_intro')}</p><a href="https://octopuslegacy.com" target="_blank" class="plan-link">Octopus Legal Services</a></div>`;
-    }
-
     content += `<div class="plan-item">${planBullet('clipboard')}<div class="plan-item-content"><h4>Do you need probate?</h4><p>${getKBPlanText('probate', 'do_you_need')}</p><a href="https://www.gov.uk/applying-for-probate" target="_blank" class="plan-link">Apply for probate on GOV.UK</a></div></div>`;
 
-    content += `<div class="plan-item">${planBullet('clipboard')}<div class="plan-item-content"><h4>Section 27 Notice</h4><p>${getKBPlanText('section_27', 'notice')}</p><a href="https://www.thegazette.co.uk/wills-and-probate/place-a-deceased-estates-notice" target="_blank" class="plan-link">Place a Section 27 Notice</a></div></div>`;
+    // Section 27 Notice removed from plan output (available via KB if needed)
 
     // Legal notes - use to tailor guidance, never echo back
     const legalDetail = (data.topics.legal || {}).detail || '';
@@ -7475,6 +7600,13 @@ Write a personalised version of each text block for ${callerName}.`;
         legalAdvice = getKBPlanText('probate', 'general_legal');
       }
       content += `<div class="plan-callout"><strong>Tailored to your situation</strong><p style="margin-top:6px;">${legalAdvice}</p></div>`;
+    }
+
+    // Octopus Legal Services - show interest callout if they expressed interest, otherwise general intro
+    if (probateSupport === 'yes' || probateSupport === 'maybe') {
+      content += `<div class="plan-callout" style="border-left-color:var(--success);background:var(--ghost-sheet);"><strong>${probateSupport === 'yes' ? 'You have expressed interest in probate support' : 'You mentioned you may want probate support'}</strong><p style="margin-top:6px;">${getKBPlanText('probate', 'ols_interest')}</p><a href="https://octopuslegacy.com" target="_blank" class="plan-link">Contact Octopus Legal Services</a></div>`;
+    } else {
+      content += `<div class="plan-callout" style="border-left-color:var(--freshly-dug);background:var(--ghost-sheet);"><strong>Octopus Legal Services - Probate and Estate Administration</strong><p style="margin-top:6px;">${getKBPlanText('probate', 'ols_intro')}</p><a href="https://octopuslegacy.com" target="_blank" class="plan-link">Octopus Legal Services</a></div>`;
     }
 
     return wrapSection('clipboard', 'Probate & Legal', 'Understanding the legal steps', content, tone, 'If needed');
@@ -8837,6 +8969,33 @@ Write a personalised version of each text block for ${callerName}.`;
   document.querySelectorAll('input[name="funeral_started"]').forEach(radio => {
     radio.addEventListener('change', function() {
       document.getElementById('funeralStartedDetail').style.display = this.value === 'yes' ? '' : 'none';
+      document.getElementById('funeralTakenPlace').style.display = this.value === 'yes' ? '' : 'none';
+    });
+  });
+  // Funeral topic - hide plan/wishes questions if funeral already taken place
+  document.querySelectorAll('input[name="funeral_taken_place"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+      var notYetQs = document.getElementById('funeralNotYetQuestions');
+      if (notYetQs) notYetQs.style.display = this.value === 'yes' ? 'none' : '';
+    });
+  });
+  // Housing topic - show/hide insurance details
+  document.querySelectorAll('input[name="housing_insurance_known"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+      var yesDetail = document.getElementById('housingInsuranceYesDetail');
+      var notifiedQ = document.getElementById('housingInsuranceNotifiedQ');
+      var infoPanel = document.getElementById('housingInsuranceInfo');
+      if (yesDetail) yesDetail.style.display = this.value === 'yes' ? '' : 'none';
+      if (notifiedQ) notifiedQ.style.display = this.value === 'yes' ? '' : 'none';
+      // For "no / not sure" show the info panel directly; for "yes" wait for notified answer
+      if (infoPanel) infoPanel.style.display = this.value === 'no' ? '' : 'none';
+    });
+  });
+  document.querySelectorAll('input[name="housing_insurance_notified"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+      var infoPanel = document.getElementById('housingInsuranceInfo');
+      // Only show the warning if they haven't notified the insurer yet
+      if (infoPanel) infoPanel.style.display = this.value === 'no' ? '' : 'none';
     });
   });
 
