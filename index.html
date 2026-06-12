@@ -1662,6 +1662,21 @@
   .pdf-mode .plan-summary-grid {
     break-inside: avoid;
   }
+  .pdf-mode .plan-checklist li {
+    border-bottom: none;
+    border-top: none;
+    padding-top: 14px;
+    margin-top: 4px;
+    background-image: linear-gradient(var(--last-light), var(--last-light));
+    background-size: 100% 1px;
+    background-repeat: no-repeat;
+    background-position: top 4px center;
+  }
+  .pdf-mode .plan-checklist li:first-child {
+    background-image: none;
+    margin-top: 0;
+    padding-top: 10px;
+  }
   .pdf-mode .plan-link::after { content: ''; }
   .pdf-mode .plan-link {
     display: inline;
@@ -1711,6 +1726,8 @@
     display: flex;
     align-items: flex-start;
     gap: 12px;
+    break-inside: avoid;
+    page-break-inside: avoid;
     line-height: 1.65;
   }
   .plan-checklist li:last-child { border-bottom: none; }
@@ -6753,6 +6770,7 @@ Write a personalised version of each text block for ${callerName}.`;
     var flowingSections = [];
     flowingSections.push('<div class="plan-cover-wordmark" style="margin-bottom:20px;">octopus<span>legacy</span></div>');
     flowingSections.push(buildCallSummary(data, adviserFullName, tone));
+    flowingSections.push('<div class="pdf-page-break-before"></div>');
 
     generatedSections.forEach(function(html) {
       if (html) flowingSections.push(html);
@@ -6805,6 +6823,7 @@ Write a personalised version of each text block for ${callerName}.`;
     var flowingSections = [];
     flowingSections.push('<div class="plan-cover-wordmark" style="margin-bottom:20px;">octopus<span>legacy</span></div>');
     flowingSections.push(buildCallSummary(data, adviserFullName, tone));
+    flowingSections.push('<div class="pdf-page-break-before"></div>');
     flowingSections.push(aiHTML);
 
     // Key Contacts (consolidated from all mentioned companies)
@@ -6955,6 +6974,7 @@ Write a personalised version of each text block for ${callerName}.`;
     let flowingSections = [];
     flowingSections.push('<div class="plan-cover-wordmark" style="margin-bottom:20px;">octopus<span>legacy</span></div>');
     flowingSections.push(buildCallSummary(data, adviserFullName, tone));
+    flowingSections.push('<div class="pdf-page-break-before"></div>');
 
     // Include sections ONLY when the task is NOT already completed.
     // Completed tasks (ac.xxx === true) appear only as ticks on the
@@ -7948,7 +7968,7 @@ Write a personalised version of each text block for ${callerName}.`;
       html2canvas:  { scale: 2, useCORS: true, letterRendering: true, scrollY: 0, scrollX: 0 },
       enableLinks:  true,
       jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak:    { mode: ['css'], before: ['.pdf-page-break', '.pdf-page-break-before'], avoid: ['.plan-item', '.plan-callout', '.plan-section-header', '.pdf-no-break', '.plan-org-item'] }
+      pagebreak:    { mode: ['css', 'legacy'], before: ['.pdf-page-break', '.pdf-page-break-before'], avoid: ['.plan-item', '.plan-callout', '.plan-section-header', '.pdf-no-break', '.plan-org-item', '.plan-checklist li'] }
     };
   }
 
@@ -7989,8 +8009,6 @@ Write a personalised version of each text block for ${callerName}.`;
 
     // For sections that are too tall for one page, wrap the header with the
     // first content item so they are never separated across a page break.
-    // Clone the first child into the wrapper instead of moving it, to avoid
-    // disrupting the section body's element order.
     el.querySelectorAll('.pdf-flowing-content .plan-section').forEach(function(sec) {
       if (sec.getAttribute('data-pdf-nobreak-added')) return;
       var header = sec.querySelector('.plan-section-header');
@@ -7998,8 +8016,11 @@ Write a personalised version of each text block for ${callerName}.`;
       if (!header || !body) return;
       var firstChild = body.firstElementChild;
       if (!firstChild) return;
-      // Skip sections with org items - their internal structure is fragile
-      if (body.querySelector('.plan-org-item')) return;
+      // For sections with org items, the first child can be very tall.
+      // Only wrap if the header + first child combined fit within ~half a page
+      // (500px). Otherwise rely on CSS break-after:avoid on the header alone.
+      var combinedH = (header.offsetHeight || 0) + (firstChild.offsetHeight || 0);
+      if (combinedH > 500) return;
       var wrapper = document.createElement('div');
       wrapper.classList.add('pdf-no-break');
       wrapper.setAttribute('data-pdf-header-group', '1');
