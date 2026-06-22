@@ -2433,17 +2433,26 @@
             <div class="field-group"><label>Date <span class="req">*</span></label><input type="date" name="call_date" required></div>
             <div class="field-group"><label>Time</label><input type="time" name="call_time"></div>
           </div>
-          <div class="field-row cols-2">
-            <div class="field-group"><label>Specialist Name <span class="req">*</span></label><input type="text" name="adviser_name" required placeholder="e.g. Sarah Thompson"></div>
-            <div class="field-group"><label>Source</label>
-              <div class="check-group">
-                <label><input type="radio" name="call_source" value="employer" onchange="document.getElementById('employer_name_row').style.display=this.checked?'flex':'none'"> Employer</label>
-                <label><input type="radio" name="call_source" value="website" onchange="document.getElementById('employer_name_row').style.display='none'"> Website</label>
-              </div>
-              <div id="employer_name_row" style="display:none;align-items:center;gap:8px;margin-top:6px;">
-                <label style="font-size:12px;color:var(--ink);white-space:nowrap;margin:0;">Employer name</label>
-                <input type="text" name="employer_name" placeholder="e.g. Acme Ltd" style="flex:1;font-size:12px;padding:5px 8px;">
-              </div>
+          <div class="field-group" style="margin-top:8px;">
+            <label>Specialist Name <span class="req">*</span></label><input type="text" name="adviser_name" required placeholder="e.g. Sarah Thompson" style="max-width:340px;">
+          </div>
+          <div class="field-group" style="margin-top:8px;">
+            <label>Source</label>
+            <div class="check-group" id="sourceCheckGroup">
+              <label><input type="radio" name="call_source" value="funeral_partner"> Funeral partner</label>
+              <label><input type="radio" name="call_source" value="hospice"> Hospice</label>
+              <label><input type="radio" name="call_source" value="charity"> Charity</label>
+              <label><input type="radio" name="call_source" value="employer_eap"> Employer / EAP</label>
+              <label><input type="radio" name="call_source" value="bank"> Bank</label>
+              <label><input type="radio" name="call_source" value="insurer"> Insurer / protection</label>
+              <label><input type="radio" name="call_source" value="adviser"> Adviser / IFA</label>
+              <label><input type="radio" name="call_source" value="referral"> Referral</label>
+              <label><input type="radio" name="call_source" value="website"> Website</label>
+              <label><input type="radio" name="call_source" value="other"> Other</label>
+            </div>
+            <div id="source_detail_row" style="display:none;align-items:center;gap:8px;margin-top:8px;">
+              <label id="source_detail_label" style="font-size:12px;color:var(--ink);white-space:nowrap;margin:0;">Name</label>
+              <input type="text" name="source_detail" id="source_detail_input" placeholder="e.g. Acme Ltd" style="flex:1;font-size:12px;padding:6px 10px;border:1px solid var(--gone-but-golden);border-radius:6px;">
             </div>
           </div>
           <div class="field-group" style="margin-top:8px;">
@@ -4731,7 +4740,8 @@ ${context}`;
         date: gv('call_date'), time: gv('call_time'),
         adviser_name: gv('adviser_name'),
         source: gr('call_source'),
-        employer_name: gv('employer_name'),
+        source_detail: gv('source_detail'),
+        employer_name: gv('source_detail'),
         cover_message: gv('cover_message')
       },
       caller: {
@@ -5120,7 +5130,7 @@ ${context}`;
           searchable = [
             d.caller.first_name, d.caller.surname,
             d.call_details.adviser_name, d.call_details.source,
-            d.call_details.employer_name, d.caller.relationship,
+            d.call_details.source_detail, d.call_details.employer_name, d.caller.relationship,
             d.call_details.date, entry._email
           ].join(' ').toLowerCase();
         } else {
@@ -5233,7 +5243,7 @@ ${context}`;
       ['Time', d.call_details.time],
       ['Adviser', d.call_details.adviser_name],
       ['Source', d.call_details.source],
-      ['Employer', d.call_details.employer_name],
+      ['Source detail', d.call_details.source_detail || d.call_details.employer_name],
       ['Email', entry._email]
     ]);
 
@@ -5466,6 +5476,8 @@ ${context}`;
     document.querySelectorAll('.info-dropdown, [id$="Detail"], [id$="FollowUp"], [id$="InfoPopup"], [id$="YesDetail"], [id$="NoDetail"]').forEach(function(el) { el.style.display = 'none'; });
     document.querySelectorAll('.topic-followup.open').forEach(function(el) { el.classList.remove('open'); });
     document.querySelectorAll('.employer-only-field').forEach(function(el) { el.style.display = 'none'; });
+    var srcDetailRow = document.getElementById('source_detail_row');
+    if (srcDetailRow) srcDetailRow.style.display = 'none';
     var funeralNotYet = document.getElementById('funeralNotYetQuestions');
     if (funeralNotYet) funeralNotYet.style.display = '';
     var housingInsInfo = document.getElementById('housingInsuranceInfo');
@@ -7604,8 +7616,9 @@ Write a personalised version of each text block for ${callerName}.`;
   function buildEmploymentSection(data, tone) {
     const emp = data.topics.employment || {};
     const spokenDone = emp.spoken === 'yes';
-    const isEmployerSource = (data.call_details || {}).source === 'employer';
-    const employerName = (data.call_details || {}).employer_name || 'your employer';
+    const callSource = (data.call_details || {}).source || '';
+    const isEmployerSource = (callSource === 'employer' || callSource === 'employer_eap');
+    const employerName = (data.call_details || {}).source_detail || (data.call_details || {}).employer_name || 'your employer';
     let content = '';
 
     if (spokenDone) {
@@ -9191,14 +9204,38 @@ Write a personalised version of each text block for ${callerName}.`;
     });
   });
 
-  // Source - show/hide employer-only fields (benefits question + popup)
+  // Source - show/hide detail input + employer-only fields
+  var sourceDetailLabels = {
+    funeral_partner: ['Funeral partner name', 'e.g. Dignity Funerals'],
+    hospice: ['Hospice name', 'e.g. St Christopher\'s'],
+    charity: ['Charity name', 'e.g. Cruse Bereavement'],
+    employer_eap: ['Employer / EAP name', 'e.g. Acme Ltd / Health Assured'],
+    bank: ['Bank name', 'e.g. Barclays'],
+    insurer: ['Insurer / provider name', 'e.g. Aviva'],
+    adviser: ['Adviser / IFA name', 'e.g. Smith & Partners'],
+    referral: ['Referred by', 'e.g. Dr Jane Smith'],
+    other: ['Please specify', 'e.g. Solicitor, friend, etc.']
+  };
   document.querySelectorAll('input[name="call_source"]').forEach(radio => {
     radio.addEventListener('change', function() {
-      const isEmployer = this.value === 'employer';
+      var val = this.value;
+      var detailRow = document.getElementById('source_detail_row');
+      var detailLabel = document.getElementById('source_detail_label');
+      var detailInput = document.getElementById('source_detail_input');
+      // Show/hide detail text box (all except website)
+      if (val !== 'website' && sourceDetailLabels[val]) {
+        detailRow.style.display = 'flex';
+        detailLabel.textContent = sourceDetailLabels[val][0];
+        detailInput.placeholder = sourceDetailLabels[val][1];
+      } else {
+        detailRow.style.display = 'none';
+        detailInput.value = '';
+      }
+      // Show/hide employer-only fields (benefits question + popup)
+      var isEmployerType = (val === 'employer' || val === 'employer_eap');
       document.querySelectorAll('.employer-only-field').forEach(el => {
-        el.style.display = isEmployer ? '' : 'none';
-        // If switching away from employer, also hide the popup and clear selections
-        if (!isEmployer) {
+        el.style.display = isEmployerType ? '' : 'none';
+        if (!isEmployerType) {
           document.getElementById('employer-benefits-popup').style.display = 'none';
           document.querySelectorAll('input[name="employer_benefits_aware"]').forEach(r => r.checked = false);
         }
