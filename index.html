@@ -3187,23 +3187,6 @@
             <p style="font-size:12px;color:var(--midnight-slate);line-height:1.7;margin-bottom:10px;">You can usually set it up when you register the death - the registrar will give you a reference number, and then you complete it either online or over the phone. You've got 28 days from when the death is registered to do it.</p>
             <p style="font-size:12px;color:var(--midnight-slate);line-height:1.7;margin-bottom:0;">You'll just need a few bits of information to hand - things like their National Insurance number, passport number, and driving licence number. We'll pop all the details and a link into your support plan so you don't need to remember any of this now.</p>
           </div>
-          <div class="field-group" style="margin-top:18px"><label>Which of these organisations might need to be told?</label>
-            <div class="check-group">
-              <label><input type="checkbox" name="org_dwp"> DWP / Benefits</label>
-              <label><input type="checkbox" name="org_hmrc"> HMRC</label>
-              <label><input type="checkbox" name="org_council"> Local council</label>
-              <label><input type="checkbox" name="org_bank"> Bank(s)</label>
-              <label><input type="checkbox" name="org_pension"> Pension provider(s)</label>
-              <label><input type="checkbox" name="org_insurance"> Insurance</label>
-              <label><input type="checkbox" name="org_home_insurance"> Home insurance (urgent - notify insurer if property is unoccupied)</label>
-              <label><input type="checkbox" name="org_employer"> Their employer</label>
-              <label><input type="checkbox" name="org_gp"> GP / NHS</label>
-              <label><input type="checkbox" name="org_dvla"> DVLA</label>
-              <label><input type="checkbox" name="org_passport"> Passport Office</label>
-              <label><input type="checkbox" name="org_utility"> Utility companies</label>
-              <label><input type="checkbox" name="org_tv"> TV Licence</label>
-            </div>
-          </div>
           <div class="field-group" style="margin-top:16px"><label data-rel-label="Do you know of any online accounts {they} had?">Do you know of any online accounts they had?</label>
             <textarea name="digital_accounts" rows="2" placeholder="e.g. Facebook, Gmail, Netflix, Amazon..."></textarea></div>
         </div>
@@ -5044,10 +5027,6 @@ ${context}`;
         notify: {
           living_situation: gr('living_situation'),
             housing_insurance_known: gr('housing_insurance_known'), housing_insurance_provider: gv('housing_insurance_provider'), housing_insurance_notified: gr('housing_insurance_notified'),
-          orgs_to_notify: { dwp: gc('org_dwp'), hmrc: gc('org_hmrc'), council: gc('org_council'),
-            bank: gc('org_bank'), pension: gc('org_pension'), insurance: gc('org_insurance'),
-            employer: gc('org_employer'), gp: gc('org_gp'), dvla: gc('org_dvla'),
-            passport: gc('org_passport'), utilities: gc('org_utility'), tv: gc('org_tv') },
           tell_us_once: gr('notify_tuo'), tuo_knows: gr('notify_tuo_knows'),
           digital_accounts: gv('digital_accounts')
         },
@@ -5548,16 +5527,6 @@ ${context}`;
         ['Living Situation', t.notify.living_situation],
         ['Digital Accounts', t.notify.digital_accounts]
       ];
-      if (t.notify.orgs_to_notify) {
-        var orgLabels = { dwp:'DWP', hmrc:'HMRC', council:'Council', bank:'Bank', pension:'Pension',
-          insurance:'Insurance', employer:'Employer', gp:'GP/NHS', dvla:'DVLA',
-          passport:'Passport Office', utilities:'Utilities', tv:'TV Licence' };
-        var selected = [];
-        Object.keys(orgLabels).forEach(function(k) {
-          if (t.notify.orgs_to_notify[k]) selected.push(orgLabels[k]);
-        });
-        if (selected.length) notifyRows.push(['Organisations to Notify', selected.join(', ')]);
-      }
       html += buildDetailCard('Notify Organisations', notifyRows);
     }
 
@@ -6004,12 +5973,9 @@ ${context}`;
     var notifyData = data.topics.notify || {};
     if (notifyData.tell_us_once !== 'yes') relevantTags.add('tell us once');
 
-    // Check which specific orgs are selected
-    var orgs = notifyData.orgs_to_notify || {};
-    if (orgs.bank) { relevantTags.add('bank'); relevantTags.add('bereavement team'); }
-    if (orgs.pension) relevantTags.add('pensions');
-    if (orgs.insurance) relevantTags.add('insurance');
-    if (orgs.employer) relevantTags.add('employer');
+    // Always include common org tags since the plan now shows examples for all
+    relevantTags.add('bank'); relevantTags.add('bereavement team');
+    relevantTags.add('pensions'); relevantTags.add('insurance');
 
     // Finances
     if (data.immediate_concerns.finances) {
@@ -6252,7 +6218,7 @@ Please write the personalised bereavement plan sections for ${callerName}. Remem
     timeline: ['timeline__registering','timeline__employment','timeline__will','timeline__dependants','timeline__funeral','timeline__notifications','timeline__financial','timeline__housing','timeline__legal','timeline__benefits','timeline__wellbeing'],
     registering: ['registration__register', 'registration__registered_done', 'registration__certificates', 'registration__coroner_note', 'registration__abroad_note', 'registration__general_note'],
     will: ['will__will_found', 'will__reading', 'will__executor_duties', 'will__executor_unsure', 'will__finding', 'will__solicitor_note', 'will__general_note', 'will__will_register_search', 'will__dispute_note', 'intestacy__no_will', 'intestacy__no_will_notes'],
-    funeral: ['funeral__choosing', 'funeral__pre_paid_known', 'funeral__pre_paid_unsure', 'funeral__type_advice', 'funeral__cost_advice', 'funeral__general_advice', 'funeral__wishes_gather', 'funeral__compare_tip', 'funeral_costs__help'],
+    funeral: ['funeral__choosing', 'funeral__pre_paid_known', 'funeral__pre_paid_unsure', 'funeral__type_advice', 'funeral__cost_advice', 'funeral__general_advice', 'funeral__wishes_gather', 'funeral__compare_tip', 'funeral_costs__help', 'funeral__wishes_personalised'],
     notifications: ['tell_us_once__service', 'tell_us_once__completed', 'notify_orgs__life_ledger', 'notify_orgs__ol_concierge', 'bank__notify'],
     financial: ['bank__notify', 'bank__hardship', 'bank__finding_assets', 'iht__summary'],
     legal: ['probate__ols_intro', 'probate__ols_interest', 'probate__do_you_need', 'section_27__notice', 'probate__property_legal', 'probate__debt_legal', 'probate__general_legal', 'iht__legal_detail'],
@@ -6304,12 +6270,36 @@ Please write the personalised bereavement plan sections for ${callerName}. Remem
     var kbKeys = SECTION_KB_MAP[sectionKey] || [];
     var referenceBlocks = [];
     kbKeys.forEach(function(compositeKey) {
+      if (compositeKey === 'funeral__wishes_personalised') return; // handled separately below
       var parts = compositeKey.split('__');
       var refText = getKBPlanText(parts[0], parts[1]);
       if (refText) {
         referenceBlocks.push({ key: compositeKey, reference: refText });
       }
     });
+
+    // For funeral sections: inject raw wish data so LLM can rephrase into natural bullets
+    if (sectionKey === 'funeral') {
+      var funData = personalDetails.funeral || {};
+      var unsureData = personalDetails.unsure || {};
+      var rawWishes = funData.wishes || unsureData.funeral_wishes || '';
+      var rawMusic = funData.music || unsureData.funeral_music || '';
+      var rawTouches = funData.personal_touches || unsureData.funeral_personal_touches || '';
+      var rawCultural = funData.cultural || unsureData.funeral_cultural || '';
+      var dismissals = ['no','none','n/a','na','nil','nothing','-','nope','not sure','unsure'];
+      function isReal(v) { return v && v.trim() && !dismissals.includes(v.trim().toLowerCase()); }
+      var wishInputs = [];
+      if (isReal(rawWishes)) wishInputs.push('Funeral wishes: ' + rawWishes.trim());
+      if (isReal(rawMusic)) wishInputs.push('Music: ' + rawMusic.trim());
+      if (isReal(rawTouches)) wishInputs.push('Personal touches: ' + rawTouches.trim());
+      if (isReal(rawCultural)) wishInputs.push('Cultural or religious: ' + rawCultural.trim());
+      if (wishInputs.length > 0) {
+        referenceBlocks.push({
+          key: 'funeral__wishes_personalised',
+          reference: 'The caller shared these wishes for ' + decFirst + '\'s funeral:\n' + wishInputs.join('\n') + '\n\nRephrase each wish as a warm, natural sentence as if an adviser is reflecting back what they heard. Do NOT repeat the input text word-for-word - rephrase it in your own words. For example, if the input says "Burial", write something like "You mentioned that ' + decFirst + ' would have liked to be buried." If the input says "He loved the band Madness", write something like "You mentioned that ' + decFirst + ' loved the band Madness - keep this in mind when thinking about songs for the service." Return the result as bullet point HTML: a <ul> tag containing <li> tags, one for each wish rephrased. Do not include any labels like "Funeral wishes:" or "Music:" - just the natural sentences.'
+        });
+      }
+    }
 
     var systemPrompt = `You are a bereavement specialist at Octopus Legacy writing the "${config.title}" section of a personalised bereavement plan for ${callerName}.
 
@@ -7709,24 +7699,35 @@ Write a personalised version of each text block for ${callerName}.`;
     }
     content += `<div class="plan-item">${planBullet('heart')}<div class="plan-item-content"><h4>Choosing a funeral director</h4><p>${choosingMsg}</p></div></div>`;
 
-    // Personal wishes - rendered as bullet list, never echoing verbatim input
+    // Personal wishes — LLM-rephrased into natural, personalised bullet points
     const wishes = fun.wishes || (data.topics.unsure || {}).funeral_wishes || '';
     const music = fun.music || (data.topics.unsure || {}).funeral_music || '';
     const touches = fun.personal_touches || (data.topics.unsure || {}).funeral_personal_touches || '';
-    if (hasMeaningful(wishes) || hasMeaningful(music) || hasMeaningful(touches)) {
-      let wishBullets = [];
-      if (hasMeaningful(wishes)) wishBullets.push('<li>There are some thoughts about the kind of funeral for ' + escHTML(decFirst) + '. Share these with your funeral director when you are ready.</li>');
-      if (hasMeaningful(music)) wishBullets.push('<li>There are some music choices in mind — a lovely way to make the day feel personal.</li>');
-      if (hasMeaningful(touches)) wishBullets.push('<li>There are some ideas for personal touches. A good funeral director can help bring these to life.</li>');
-      if (wishBullets.length === 0) wishBullets.push('<li>There are some thoughts about what the funeral could look like. Hold on to these and share them with your funeral director when you are ready.</li>');
-      content += `<div class="plan-item">${planBullet('heart')}<div class="plan-item-content"><h4>Your wishes for ${escHTML(decFirst)}</h4><ul style="margin:4px 0 0 18px;padding:0;font-size:13px;line-height:1.5;color:var(--ink);">${wishBullets.join('')}</ul><p style="margin-top:8px;">${getKBPlanText('funeral', 'wishes_gather').replace(/their life and personality/g, escHTML(decFirst) + '\'s life and personality').replace('what they would have wanted', 'what ' + escHTML(decFirst) + ' would have wanted')}</p></div></div>`;
-    }
-
-    // Cultural or religious considerations - tailored response
     const cultural = fun.cultural || (data.topics.unsure || {}).funeral_cultural || '';
-    if (cultural && cultural.trim().toLowerCase() !== 'no' && cultural.trim().toLowerCase() !== 'none' && cultural.trim().toLowerCase() !== 'n/a') {
-      const culturalResponse = buildCulturalGuidance(cultural);
-      content += `<div class="plan-callout" style="border-left-color:var(--freshly-dug);"><strong>Cultural and religious considerations</strong><p style="margin-top:6px;">${culturalResponse}</p></div>`;
+    const hasCultural = cultural && cultural.trim().toLowerCase() !== 'no' && cultural.trim().toLowerCase() !== 'none' && cultural.trim().toLowerCase() !== 'n/a';
+    if (hasMeaningful(wishes) || hasMeaningful(music) || hasMeaningful(touches) || hasCultural) {
+      // Use LLM-personalised wishes if available, otherwise fall back to simple rephrased format
+      var personalisedWishHTML = _hybridPersonalisedText['funeral__wishes_personalised'] || '';
+      if (personalisedWishHTML) {
+        // LLM generated the wish bullets — use them directly
+        // Ensure the HTML is wrapped in a styled <ul> if the LLM returned one
+        var wishContent = personalisedWishHTML;
+        if (wishContent.indexOf('<ul') === -1) {
+          wishContent = '<ul style="margin:8px 0 0 18px;padding:0;font-size:13px;line-height:1.7;color:var(--ink);">' + wishContent + '</ul>';
+        } else {
+          // Add styling to the LLM's <ul> tag
+          wishContent = wishContent.replace('<ul', '<ul style="margin:8px 0 0 18px;padding:0;font-size:13px;line-height:1.7;color:var(--ink);"');
+        }
+        content += `<div class="plan-item">${planBullet('heart')}<div class="plan-item-content"><h4>Your wishes for ${escHTML(decFirst)}</h4><p>You shared some thoughts about what ${escHTML(decFirst)} may have wanted for the funeral. Having this in mind can really help shape a service that feels right.</p>${wishContent}<p style="margin-top:8px;">Share these with your funeral director when you are ready. They can help bring these wishes to life.</p></div></div>`;
+      } else {
+        // Fallback: simple rephrased format (no LLM available)
+        let wishBullets = [];
+        if (hasMeaningful(wishes)) wishBullets.push('<li>Funeral wishes: ' + escHTML(wishes) + '</li>');
+        if (hasMeaningful(music)) wishBullets.push('<li>Music: ' + escHTML(music) + '</li>');
+        if (hasMeaningful(touches)) wishBullets.push('<li>Personal touches: ' + escHTML(touches) + '</li>');
+        if (hasCultural) wishBullets.push('<li>Cultural or religious: ' + escHTML(cultural) + '</li>');
+        content += `<div class="plan-item">${planBullet('heart')}<div class="plan-item-content"><h4>Your wishes for ${escHTML(decFirst)}</h4><p>You shared some wishes that ${escHTML(decFirst)} may have wanted for the funeral. Having this information can really help shape a service that reflects what ${escHTML(decFirst)} would have wanted.</p><ul style="margin:8px 0 0 18px;padding:0;font-size:13px;line-height:1.7;color:var(--ink);">${wishBullets.join('')}</ul><p style="margin-top:8px;">Share these with your funeral director when you are ready. They can help bring these wishes to life.</p></div></div>`;
+      }
     }
 
     if (fun.cost_concern === 'yes' || fun.paying === 'unsure') {
@@ -7743,12 +7744,9 @@ Write a personalised version of each text block for ${callerName}.`;
       const districtLabel = pcData.district ? ', ' + escHTML(pcData.district) : '';
       content += `<div class="plan-callout" style="border-left-color:var(--freshly-dug);">
         <strong>Funeral directors near ${areaLabel}${districtLabel}</strong>
-        <p style="margin-top:8px;font-size:13px;line-height:1.7;">Based on the postcode you gave us, here are some useful links to help you find a funeral director in your area:</p>
-        <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px;">
-          <a href="https://www.google.com/maps/search/funeral+directors+near+${encodedPC}" target="_blank" class="plan-link" style="display:inline;text-transform:none;letter-spacing:0;">Google Maps - Funeral directors near ${escHTML(pcData.postcode)}</a>
-          <a href="https://www.nafd.org.uk/funeral-director-search/?postcode=${encodedPC}" target="_blank" class="plan-link" style="display:inline;text-transform:none;letter-spacing:0;">National Association of Funeral Directors (NAFD) - Find a member</a>
-          <a href="https://www.funeralguide.co.uk/funeral-directors/${encodedArea}" target="_blank" class="plan-link" style="display:inline;text-transform:none;letter-spacing:0;">FuneralGuide - Compare funeral directors</a>
-          <a href="https://www.naturaldeath.org.uk/" target="_blank" class="plan-link" style="display:inline;text-transform:none;letter-spacing:0;">The Natural Death Centre - Independent advice</a>
+        <p style="margin-top:8px;font-size:13px;line-height:1.7;">Based on the postcode you gave us, here is a link to help you find funeral directors in your area:</p>
+        <div style="margin-top:8px;">
+          <a href="https://www.google.com/maps/search/funeral+directors+near+${encodedPC}" target="_blank" class="plan-link" style="display:inline;text-transform:none;letter-spacing:0;">Google Maps — Funeral directors near ${escHTML(pcData.postcode)}</a>
         </div>
         <p style="margin-top:8px;font-size:12px;color:var(--midnight-slate);line-height:1.6;">${getKBPlanText('funeral', 'compare_tip')}</p>
       </div>`;
@@ -7843,52 +7841,24 @@ Write a personalised version of each text block for ${callerName}.`;
       content += `<div class="plan-item">${planBullet('envelope')}<div class="plan-item-content"><h4>Tell Us Once</h4><p>${getKBPlanText('tell_us_once', 'service')}${tuoDeadlineNote}</p><a href="https://www.gov.uk/after-a-death/organisations-you-need-to-contact-and-things-you-need-to-do" target="_blank" class="plan-link">Tell Us Once on GOV.UK</a></div></div>`;
     }
 
-    // ── Private companies ──
-    content += `<h4 style="font-size:14px;color:var(--ink);margin:20px 0 8px;font-weight:700;">Private companies</h4>`;
-
-    // Build org list - clean style, no bullet icons, proper capitalisation with full names
-    const orgs = not.orgs_to_notify || {};
+    // ── Other organisations to consider ──
     const decFirst = (data.deceased || {}).familiar_name || 'your loved one';
-    const orgDetails = {
-      dwp: { label: 'DWP (Department for Work and Pensions)', detail: 'If ' + escHTML(decFirst) + ' was receiving any benefits, the DWP needs to be notified. Tell Us Once can handle this, but if you have not used that service, contact them directly.' },
-      hmrc: { label: 'HMRC (His Majesty\u2019s Revenue and Customs)', detail: 'HMRC will need to know so they can close any open tax affairs and issue a final tax calculation for ' + escHTML(decFirst) + '\u2019s estate.' },
-      council: { label: 'Local Council', detail: 'Notify the council for council tax purposes. You may be entitled to a single person discount (25% off) or an exemption if the property is now empty.' },
-      home_insurance: { label: 'Home Insurance Provider (Urgent)', detail: 'If the property is now unoccupied or the policyholder has died, you must notify the home insurer as soon as possible. Many policies have a clause that voids cover if the property is empty for more than 30 days. Check the policy terms and let them know the circumstances — they may be able to adjust the cover.' },
-      bank: { label: 'Banks and Building Societies', detail: 'Contact each bank\u2019s bereavement team. They will freeze ' + escHTML(decFirst) + '\u2019s accounts and tell you what documentation they need to release funds.' },
-      pension: { label: 'Pension Providers', detail: 'Contact any pension providers to find out about death benefits, lump sum payments, or survivor pensions that may be available.' },
-      insurance: { label: 'Insurance Providers', detail: 'Home, car, life, and any other policies. Some may pay out, others will need to be cancelled or transferred to your name.' },
-      employer: { label: ucFirst(escHTML(decFirst)) + '\u2019s Employer', detail: 'Contact HR about any outstanding pay, death-in-service benefits, or workplace pension arrangements.' },
-      gp: { label: 'GP Surgery and Health Services', detail: 'The GP surgery needs to be informed so they can update their records. If ' + escHTML(decFirst) + ' was receiving ongoing treatment, let the relevant departments know.' },
-      dvla: { label: 'DVLA (Driver and Vehicle Licensing Agency)', detail: 'If ' + escHTML(decFirst) + ' held a driving licence, return it to the DVLA. You will also need to update the vehicle registration if a car needs to be transferred.' },
-      passport: { label: 'HM Passport Office', detail: 'Return ' + escHTML(decFirst) + '\u2019s passport. Cut the corner off before sending it back, or it can be cancelled through Tell Us Once.' },
-      utilities: { label: 'Utility Providers', detail: 'Gas, electric, water, and broadband. Let them know about the change of circumstances. If accounts were in ' + escHTML(decFirst) + '\u2019s name, you will need to transfer or close them.' },
-      tv: { label: 'TV Licence', detail: 'If the TV licence was in ' + escHTML(decFirst) + '\u2019s name, contact TV Licensing to transfer or cancel it. You may be entitled to a refund for any unused months.' }
-    };
-    // Use a fixed display order so org items always appear consistently
-    var orgDisplayOrder = ['dwp', 'hmrc', 'council', 'home_insurance', 'bank', 'pension', 'insurance', 'gp', 'passport', 'employer', 'dvla', 'utilities', 'tv'];
-    const toNotify = orgDisplayOrder.filter(function(k) { return orgs[k]; });
-    if (toNotify.length > 0) {
-      // Build org list items
-      var orgItems = [];
-      toNotify.forEach(function(k) {
-        const org = orgDetails[k] || { label: k, detail: '' };
-        orgItems.push('<div class="pdf-no-break plan-org-item" style="padding:10px 0;border-bottom:1px solid var(--gone-but-golden);"><strong style="font-size:13px;color:var(--ink);">' + org.label + '</strong><p style="margin:4px 0 0;font-size:12.5px;color:var(--midnight-slate);line-height:1.65;">' + org.detail + '</p></div>');
-      });
-      // Wrap the heading + first 2 org items together so they never split across pages
-      var groupCount = Math.min(2, orgItems.length);
-      content += '<div class="pdf-no-break">';
-      content += `<div class="plan-item">${planBullet('envelope')}<div class="plan-item-content"><h4>Organisations you need to contact</h4><p>Based on what you told us, these are the organisations that still need to be notified about ${escHTML(decFirst)}\u2019s death. Where we have specific contact details, you will find them in the Key Contacts section at the end of this plan.</p></div></div>`;
-      content += '<div style="margin-top:8px;">';
-      for (var oi = 0; oi < groupCount; oi++) { content += orgItems[oi]; }
-      content += '</div></div>';
-      // Remaining org items flow normally
-      if (orgItems.length > groupCount) {
-        content += '<div style="margin-top:0;">';
-        for (var oi2 = groupCount; oi2 < orgItems.length; oi2++) { content += orgItems[oi2]; }
-        content += '</div>';
-      }
-      content += `<div class="plan-callout" style="margin-top:14px;"><strong>Save yourself time</strong><p style="margin-top:6px;">${getKBPlanText('notify_orgs', 'life_ledger')}</p><a href="https://www.lifeledger.com/" target="_blank" class="plan-link">Life Ledger - notification service</a></div>`;
-    }
+    content += '<div class="pdf-no-break">';
+    content += `<div class="plan-item">${planBullet('envelope')}<div class="plan-item-content"><h4>Other organisations to consider notifying</h4><p>Beyond Tell Us Once, there are a number of private companies and services that may need to know about ${escHTML(decFirst)}\u2019s death. Here are some common examples:</p></div></div>`;
+    content += '<div style="margin-top:8px;">';
+    content += '<ul style="margin:0 0 0 18px;padding:0;font-size:12.5px;color:var(--midnight-slate);line-height:1.85;">';
+    content += '<li><strong>Banks and building societies</strong> \u2014 contact each bank\u2019s bereavement team</li>';
+    content += '<li><strong>Insurance providers</strong> \u2014 home, car, life, and any other policies</li>';
+    content += '<li><strong>Pension providers</strong> \u2014 workplace or private pensions</li>';
+    content += '<li><strong>Utility companies</strong> \u2014 gas, electric, water, broadband</li>';
+    content += '<li><strong>GP surgery</strong> \u2014 so they can update their records</li>';
+    content += '<li><strong>Employer</strong> \u2014 for outstanding pay or death-in-service benefits</li>';
+    content += '<li><strong>DVLA</strong> \u2014 if they held a driving licence</li>';
+    content += '<li><strong>TV Licensing</strong> \u2014 to transfer, cancel, or claim a refund</li>';
+    content += '<li><strong>Home insurer</strong> \u2014 especially if the property is now unoccupied</li>';
+    content += '</ul>';
+    content += '</div></div>';
+    content += `<div class="plan-callout" style="margin-top:14px;"><strong>Save yourself time</strong><p style="margin-top:6px;">${getKBPlanText('notify_orgs', 'life_ledger')}</p><a href="https://www.lifeledger.com/" target="_blank" class="plan-link">Life Ledger - notification service</a></div>`;
 
     content += `<div class="plan-callout" style="border-left-color:var(--freshly-dug);background:var(--ghost-sheet);"><strong>Rather not deal with notifications yourself?</strong><p style="margin-top:6px;">Our concierge service can handle the notifications for you, so you can focus on what matters most.</p><a href="https://octopuslegacy.com" target="_blank" class="plan-link">Get in touch with Octopus Legacy</a></div>`;
 
@@ -8053,7 +8023,7 @@ Write a personalised version of each text block for ${callerName}.`;
 
     const decFirst = (data.deceased || {}).familiar_name || 'your loved one';
     if (willFound) {
-      content += `<div class="plan-callout" style="border-left-color:var(--freshly-dug);"><strong>${ucFirst(escHTML(decFirst))}\u2019s will has been located \u2713</strong><p style="margin-top:6px;">${getKBPlanText('will', 'will_found')}</p></div>`;
+      content += `<div class="plan-callout" style="border-left-color:var(--freshly-dug);"><strong>The will has been located \u2713</strong><p style="margin-top:6px;">${getKBPlanText('will', 'will_found')}</p></div>`;
       content += `<div class="plan-item">${planBullet('pencil')}<div class="plan-item-content"><h4>Reading and understanding the will</h4><p>${getKBPlanText('will', 'reading')}</p></div></div>`;
       const callerIsExecutor = wil.caller_is_executor || u.caller_is_executor || '';
       if (callerIsExecutor === 'yes') {
@@ -8308,7 +8278,8 @@ Write a personalised version of each text block for ${callerName}.`;
   }
 
   function hasNotifications(data) {
-    return Object.values(data.topics.notify.orgs_to_notify || {}).some(v => v === true);
+    var n = data.topics.notify || {};
+    return !!(n.tell_us_once || n.living_situation || n.digital_accounts);
   }
 
   function buildCulturalGuidance(input) {
@@ -8512,6 +8483,51 @@ Write a personalised version of each text block for ${callerName}.`;
       item.style.breakInside = 'avoid';
       item.setAttribute('data-pdf-avoid-added', '1');
     });
+
+    // ── JavaScript spacer system ──
+    // html2pdf (html2canvas) does NOT respect CSS page-break-inside: avoid.
+    // It rasterises the entire DOM then slices the image into pages.
+    // We must manually detect which elements would be split across a page
+    // boundary and insert spacer divs to push them onto the next page.
+    var flowingContent = el.querySelector('.pdf-flowing-content');
+    if (flowingContent) {
+      // A4 content height in px at 96dpi: 297mm - 18mm top - 18mm bottom = 261mm
+      // 261mm * (96/25.4) = 985.5px. Use 985 as the page height.
+      var PAGE_H = 985;
+      // Cover page takes up exactly one page, so content starts at offset PAGE_H
+      var contentTop = flowingContent.getBoundingClientRect().top - el.getBoundingClientRect().top;
+      // Elements that must not be split
+      var noSplitEls = flowingContent.querySelectorAll('.plan-callout, .plan-item, .plan-wellbeing-card, .plan-org-item, .plan-summary-grid, .plan-section-header, .pdf-no-break, .plan-checklist li, .tl-milestone, ul');
+      var spacersInserted = 0;
+      for (var si = 0; si < noSplitEls.length; si++) {
+        var item = noSplitEls[si];
+        var rect = item.getBoundingClientRect();
+        var itemTop = rect.top - el.getBoundingClientRect().top;
+        var itemBottom = itemTop + rect.height;
+        // Which page does the top of this element sit on?
+        var pageOfTop = Math.floor(itemTop / PAGE_H);
+        // Where does that page end?
+        var pageEnd = (pageOfTop + 1) * PAGE_H;
+        // If the element crosses the page boundary and is small enough to fit on one page
+        if (itemBottom > pageEnd && rect.height < PAGE_H * 0.85) {
+          var gap = pageEnd - itemTop;
+          var spacer = document.createElement('div');
+          spacer.setAttribute('data-pdf-spacer', '1');
+          spacer.style.height = gap + 'px';
+          spacer.style.width = '100%';
+          spacer.style.margin = '0';
+          spacer.style.padding = '0';
+          spacer.style.border = 'none';
+          spacer.style.background = 'transparent';
+          item.parentNode.insertBefore(spacer, item);
+          spacersInserted++;
+          // Re-check from this element again since positions have shifted
+          si--;
+          // Safety: cap at 200 spacers to prevent infinite loops
+          if (spacersInserted > 200) break;
+        }
+      }
+    }
 
   }
 
